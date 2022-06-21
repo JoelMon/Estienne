@@ -128,7 +128,7 @@ mod tests {
     /// Test the parsing of a book of the Bible without an accent mark.
     #[test]
     fn t_parse_book_no_tilde() {
-        let input = "Levitico deve tener un acento: Levítico";
+        let input = "Levitico debe tener un acento: Levítico";
         let result = parse_book(input);
         assert_eq!(result, Ok((" deve tener un acento: Levítico", "Levitico")));
     }
