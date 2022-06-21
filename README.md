@@ -1,4 +1,6 @@
 # Estienne
+[![Rust](https://github.com/JoelMon/Estienne/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JoelMon/Estienne/actions/workflows/rust.yml)
+
 Estienne is a simple, powerful, and easy-to-use library for parsing Biblical verses. This project is still in its prototype phase, so please be patient with us as we continue to add features and improve the library.
 
 ## The Name
