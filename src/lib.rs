@@ -3,9 +3,13 @@ mod parsers;
 
 use once_cell::{self, sync::OnceCell};
 
-// Initialize a safe global variable. Can be only set once but read many times.
+// Initialize a safe global variable.
+// Can be only set once but read many times.
 static LOCALE: OnceCell<Locale> = OnceCell::new();
 
+// Enum to determine the language data set to use when executing.
+// Works in conjunction with `impl Locale` to create a global variable
+// with the `once_cell` crate.
 #[allow(non_camel_case_types)]
 pub enum Locale {
     en_us,
@@ -14,9 +18,11 @@ pub enum Locale {
 
 #[allow(unused_must_use)]
 impl Locale {
+    /// Retrieves the value of `LOCALE`, may retrieve an arbitrary number of times.
     pub fn get() -> &'static Locale {
         LOCALE.get().expect("LOCALE was not initialized")
     }
+    /// Sets the value of `LOCALE`, can only set once.
     pub fn new(locale: Locale) {
         LOCALE.set(locale);
     }
