@@ -3,11 +3,12 @@ mod parsers;
 
 use once_cell::{self, sync::OnceCell};
 
+
 // Initialize a safe global variable.
 // Can be only set once but read many times.
 static LOCALE: OnceCell<Locale> = OnceCell::new();
 
-// Enum to determine the language data set to use when executing.
+/// Enum to determine the language data set to use when executing.
 // Works in conjunction with `impl Locale` to create a global variable
 // with the `once_cell` crate.
 #[allow(non_camel_case_types)]
@@ -23,6 +24,7 @@ impl Locale {
         LOCALE.get().expect("LOCALE was not initialized")
     }
     /// Sets the value of `LOCALE`, can only set once.
+    //TODO: Return error if specific `locale` does not exist
     pub fn new(locale: Locale) {
         LOCALE.set(locale);
     }
@@ -61,9 +63,9 @@ pub fn scripts(line: &str) -> Option<Vec<&str>> {
 /// let result2 = est::is_scripture(script2);
 /// assert_eq!(result2, false); // Robert 3:16 is not valid
 /// ```
-pub fn is_scripture(input: &str) -> bool {
-    parsers::parsers::is_scripture(input)
-}
+// pub fn is_scripture(input: &str) -> bool {
+//     parsers::parsers::is_scripture(input)
+// }
 
 #[cfg(test)]
 
