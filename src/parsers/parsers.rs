@@ -1,13 +1,35 @@
 #![allow(dead_code)]
 use crate::{locales, Locale};
 use nom::{
-    bytes::complete::tag,
-    character::complete::{digit1, space0},
+    branch::alt,
+    bytes::complete::{tag, tag_no_case, take_till, take_until, take_while},
+    character::complete::{alpha1, alphanumeric0, digit1, space0},
+    character::is_alphanumeric,
+    combinator::map,
     sequence::{preceded, tuple},
     IResult,
 };
-use std::error::Error;
+
 use thiserror::Error;
+
+// Experimenting with Struct/impl pattern for parsing
+// as seen in https://blog.adamchalmers.com/nom-chars/
+#[derive(Debug, PartialEq, Eq)]
+struct Book {
+    book: String,
+}
+
+impl Book {
+    pub fn parse(input: &str) -> IResult<&str, Self> {
+        let parser = parse_book;
+
+        let mut book_name = map(parser, |book| Self {
+            book: String::from(book),
+        });
+
+        book_name(input)
+    }
+}
 
 // Finds any occurrence of a book name.
 //
@@ -78,15 +100,22 @@ pub(crate) fn is_scripture(input: &str) -> bool {
     }
 }
 
-// Parse a line until a scripture is found.
-pub(crate) fn find_script(input: &str) -> IResult<&str, &str> {
-    todo!()
-}
-
 // Unit tests for parsers.rs.
 #[cfg(test)]
 mod test {
     use super::*;
+
+    // Test the book struct and it's implementation.
+    #[test]
+    fn t_book_parse() {
+        Locale::new(Locale::en_us);
+        let result = Book::parse("Luke");
+        let expected: Book = Book {
+            book: String::from("Luke"),
+        };
+
+        assert_eq!(result, Ok(("", expected)));
+    }
 
     // Test the parsing of a _valid_ book or letter name.
     #[test]
