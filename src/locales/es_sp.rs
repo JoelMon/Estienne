@@ -130,6 +130,6 @@ mod tests {
     fn t_parse_book_no_tilde() {
         let input = "Levitico debe tener un acento: Levítico";
         let result = parse_book(input);
-        assert_eq!(result, Ok((" deve tener un acento: Levítico", "Levitico")));
+        assert_eq!(result, Ok((" debe tener un acento: Levítico", "Levitico")));
     }
 }
