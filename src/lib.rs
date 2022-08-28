@@ -7,7 +7,7 @@ use once_cell::{self, sync::OnceCell};
 // Can be only set once but read many times.
 static LOCALE: OnceCell<Locale> = OnceCell::new();
 
-// Enum to determine the language data set to use when executing.
+/// Enum to determine the language data set to use when executing.
 // Works in conjunction with `impl Locale` to create a global variable
 // with the `once_cell` crate.
 #[allow(non_camel_case_types)]
@@ -61,9 +61,9 @@ pub fn scripts(line: &str) -> Option<Vec<&str>> {
 /// let result2 = est::is_scripture(script2);
 /// assert_eq!(result2, false); // Robert 3:16 is not valid
 /// ```
-pub fn is_scripture(input: &str) -> bool {
-    parsers::parsers::is_scripture(input)
-}
+// pub fn is_scripture(input: &str) -> bool {
+//     parsers::parsers::is_scripture(input)
+// }
 
 #[cfg(test)]
 

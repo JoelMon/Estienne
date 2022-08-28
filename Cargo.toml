@@ -9,9 +9,10 @@ edition = "2021"
 name = "est"
 
 [dependencies]
-once_cell = "1.12.0"
-pest = "2.3.0"
-thiserror ="1.0.31"
+once_cell = "1.12"
+pest = "2.0"
+pest_derive = "2.0"
+thiserror ="1.0"
 
 
 
