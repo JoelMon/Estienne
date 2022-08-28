@@ -1,29 +1,23 @@
 #![allow(dead_code)]
+use crate::locales::en_us::book;
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Scripture {
     name: String,
     chapter: u8,
     verse: u8,
 }
 
-impl Scripture {
-    fn find(line: &str) -> Option<Vec<Scripture>> {
-        if line.is_empty() {return None};
-        todo!()
-    }
-
-    fn set(&self) -> Self {
-        todo!()
-    }
+fn find(line: &str) -> Option<Vec<Scripture>> {
+    todo!()
 }
 
 #[cfg(test)]
 mod test {
-    use crate::locales::en_us::book;
+    use super::*;
 
     #[test]
     fn t_find() {
-        let result = book("Matthew");
-        assert_eq!(result.unwrap(), "Matthew")
+        assert!(true);
     }
 }

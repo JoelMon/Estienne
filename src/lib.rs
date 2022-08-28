@@ -3,6 +3,7 @@ mod parsers;
 
 use once_cell::{self, sync::OnceCell};
 
+
 // Initialize a safe global variable.
 // Can be only set once but read many times.
 static LOCALE: OnceCell<Locale> = OnceCell::new();

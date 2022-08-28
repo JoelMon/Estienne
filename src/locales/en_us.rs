@@ -1,7 +1,6 @@
-#![allow(dead_code)]
 use super::Book;
 
-pub fn book(book: Book) -> Option<Book> {
+pub fn book() -> [Book; 66] {
     const BOOKS: [Book; 66] = [
         "genesis",
         "exodus",
@@ -71,44 +70,6 @@ pub fn book(book: Book) -> Option<Book> {
         "revelation",
     ];
 
-    if BOOKS.contains(&book.to_lowercase().as_str()) {
-        Some(book)
-    } else {
-        None
-    }
+    BOOKS
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn t_book_titlecase() {
-        let result = book("Exodus");
-        assert_eq!(result, Some("Exodus"));
-    }
-
-    #[test]
-    fn t_book_uppercase() {
-        let result = book("JOHN");
-        assert_eq!(result, Some("JOHN"));
-    }
-
-    #[test]
-    fn t_book_mixedcase() {
-        let result = book("1 TiMoThY");
-        assert_eq!(result, Some("1 TiMoThY"));
-    }
-
-    #[test]
-    fn t_book_lowercase() {
-        let result = book("matthew");
-        assert_eq!(result, Some("matthew"));
-    }
-
-    #[test]
-    fn t_book_none() {
-        let result = book("Robert");
-        assert_eq!(result, None);
-    }
-}
