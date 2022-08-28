@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-
-type Book = &'static str;
+use super::Book;
 
 pub fn book(book: Book) -> Option<Book> {
     const BOOKS: [Book; 66] = [
