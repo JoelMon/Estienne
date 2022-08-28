@@ -23,6 +23,7 @@ impl Locale {
         LOCALE.get().expect("LOCALE was not initialized")
     }
     /// Sets the value of `LOCALE`, can only set once.
+    //TODO: Return error if specific `locale` does not exist
     pub fn new(locale: Locale) {
         LOCALE.set(locale);
     }
