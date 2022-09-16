@@ -2,7 +2,7 @@ mod locales;
 mod parsers;
 
 use once_cell::{self, sync::OnceCell};
-
+use regex::Regex;
 
 // Initialize a safe global variable.
 // Can be only set once but read many times.
@@ -30,6 +30,10 @@ impl Locale {
     }
 }
 
+fn get_regex() -> regex::Regex {
+    Regex::new(r"/(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)/ig").unwrap()
+}
+
 // TODO: unignore doc test
 /// Returns all scriptures in the passed in &str.
 ///
@@ -42,8 +46,13 @@ impl Locale {
 /// let result = est::scripts(line: &str);
 /// assert_eq!(result, Some(Vec["John 3:16"]));
 /// ```
-pub fn scripts(line: &str) -> Option<Vec<&str>> {
-    todo!()
+pub fn scripts(line: &str) -> Option<Vec<bool>> {
+    let mut scripts: Vec<bool> = Vec::new();
+    let re = get_regex();
+
+    scripts.push(re.is_match(line));
+
+    Some(scripts)
 }
 
 /// Returns true if the beginning of the &str is a valid scripture.
@@ -66,18 +75,16 @@ pub fn scripts(line: &str) -> Option<Vec<&str>> {
 // pub fn is_scripture(input: &str) -> bool {
 //     parsers::parsers::is_scripture(input)
 // }
-
 #[cfg(test)]
-
 mod test {
     use crate::*;
 
-    // #[test]
+    #[test]
     /// Test whether a scripture is returned when it is found within a &str.
     fn t_return_scripts() {
         let input: &str = "We can see God's love for people at John 3:16.";
         let result = scripts(input);
 
-        assert_eq!(result, Some(vec!["John 3:16"]));
+        assert_eq!(result, Some(vec![true]));
     }
 }

@@ -20,11 +20,11 @@ lazy_static! {
 mod test {
     use super::*;
 
-    #[test]
-    fn t_find() {
-        let result = RE.find("Matthew 24:14").unwrap();
-        dbg!(result);
-        assert_eq!(result.start(), 0);
-        assert_eq!(result.end(), 5);
-    }
+    // #[test]
+    // fn t_find() {
+    //     let result = RE.find("Matthew 24:14").unwrap();
+    //     dbg!(result);
+    //     assert_eq!(result.start(), 0);
+    //     assert_eq!(result.end(), 5);
+    // }
 }
