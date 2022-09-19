@@ -23,11 +23,7 @@ pub fn find_scriptures(line: &str) -> Vec<ScriptSlice> {
     let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
     let re: &regex::Regex = &RE;
 
-    dbg!("About to run");
     for script in re.find_iter(line) {
-        dbg!("Running... ");
-        dbg!(&script.start());
-
         scrip_slices.push((script.start(), script.end()));
     }
 
