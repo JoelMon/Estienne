@@ -41,28 +41,33 @@ impl Scripts {
             elements: Elements { prefix, postfix },
         }
     }
+    fn update(mut self) -> Self {
+
+        let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
+        let re: &regex::Regex = &RE;
+
+        for script in re.find_iter(self.text.as_str()) {
+            scrip_slices.push((script.start(), script.end()));
+        }
+
+       self.slice = scrip_slices;
+       self
+    }
 
     pub(crate) fn add_prefix(mut self) -> Self {
-        let prefix_len = self.elements.prefix.as_ref().map_or(0, |v| v.len());
+        let mut slice_copy = self.clone();
 
-        // After the first loop, the size of the prefix has to be taken into account to avoid
-        // having the index off by prefix length. This happens because the index of all the
-        // scriptures is taken before text is added to the original text line.
-        for (i, scripture_loc) in self.slice.iter().enumerate() {
-            if i < 1 {
-                self.text.insert_str(
-                    scripture_loc.0,
-                    self.elements.prefix.as_ref().map_or("", |v| v.as_str()),
-                );
-            } else {
-                self.text.insert_str(
-                    scripture_loc.0 + prefix_len,
-                    self.elements.prefix.as_ref().map_or("", |v| v.as_str()),
-                );
-            }
+        for i in 0..slice_copy.slice.len() {
+            
+            self.text.insert_str(slice_copy.slice[i].0, self.elements.prefix.as_deref().map_or("", |v| v));
+            slice_copy.update();
+            
         }
 
         self
+
+
+
     }
 
     pub(crate) fn add_postfix(mut self) -> Self {
@@ -139,9 +144,7 @@ mod test {
         let result = result.add_prefix();
         assert_eq!(
             result.text,
-            String::from(
-                "Another popular scripture is John 3:16, it's quoted often."
-            )
+            String::from("Another popular scripture is John 3:16, it's quoted often.")
         )
     }
 
