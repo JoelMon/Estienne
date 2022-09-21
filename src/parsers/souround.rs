@@ -19,7 +19,7 @@ struct Elements {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct Scripts {
+pub(crate) struct Scripts {
     text: String,
     slice: Vec<ScriptSlice>,
     elements: Elements,
@@ -27,7 +27,7 @@ struct Scripts {
 
 impl Scripts {
     // Find all scriptures in a line and return the beginning index and length.
-    fn new(text: String, prefix: Option<String>, postfix: Option<String>) -> Self {
+    pub(crate) fn new(text: String, prefix: Option<String>, postfix: Option<String>) -> Self {
         let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
         let re: &regex::Regex = &RE;
 
@@ -42,7 +42,7 @@ impl Scripts {
         }
     }
 
-    fn add_prefix(mut self) -> Self {
+    pub(crate) fn add_prefix(mut self) -> Self {
         let prefix_len = self.elements.prefix.as_ref().map_or(0, |v| v.len());
 
         // After the first loop, the size of the prefix has to be taken into account to avoid
@@ -65,7 +65,7 @@ impl Scripts {
         self
     }
 
-    fn add_postfix(mut self) -> Self {
+    pub(crate) fn add_postfix(mut self) -> Self {
         let postfix_len = self.elements.postfix.as_ref().map_or(0, |v| v.len());
 
         // After the first loop, the size of the postfix has to be taken into account to avoid
@@ -86,6 +86,10 @@ impl Scripts {
         }
 
         self
+    }
+
+    pub(crate) fn get_text(self) -> String {
+        self.text
     }
 }
 
