@@ -1,5 +1,6 @@
 use super::Book;
 
+#[allow(dead_code)]
 pub fn book() -> [Book; 66] {
     const BOOKS: [Book; 66] = [
         "genesis",

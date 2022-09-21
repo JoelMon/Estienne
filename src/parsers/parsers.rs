@@ -46,7 +46,7 @@ impl Scripts {
         let prefix_len = self.elements.prefix.as_ref().map_or(0, |v| v.len());
 
         // After the first loop, the size of the prefix has to be taken into account to avoid
-        // having the index off by prfix length. This happens because the index of all the
+        // having the index off by prefix length. This happens because the index of all the
         // scriptures is taken before text is added to the original text line.
         for (i, scripture_loc) in self.slice.iter().enumerate() {
             if i < 1 {
@@ -128,6 +128,20 @@ mod test {
     }
 
     #[test]
+    // Tests if an empty "" is added if prefix is `None`.
+    fn t_add_element_prefix_single_none() {
+        let text = "Another popular scripture is John 3:16, it's quoted often.".to_string();
+        let result = Scripts::new(text, None, None);
+        let result = result.add_prefix();
+        assert_eq!(
+            result.text,
+            String::from(
+                "Another popular scripture is John 3:16, it's quoted often."
+            )
+        )
+    }
+
+    #[test]
     fn t_add_element_prefix_multi_1() {
         let text = "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often."
             .to_string();
@@ -162,10 +176,21 @@ mod test {
         let text = "Another popular scripture is John 3:16, it's quoted often.".to_string();
         let result = Scripts::new(text, None, Some("[postfix]".to_string()));
         let result = result.add_postfix();
-
         assert_eq!(
             result.text,
             String::from("Another popular scripture is John 3:16[postfix], it's quoted often.")
+        )
+    }
+
+    #[test]
+    // Tests to make sure the prefix len is taken into consideration for each scripture found.
+    fn t_add_element_postfix_single_none() {
+        let text = "Another popular scripture is John 3:16, it's quoted often.".to_string();
+        let result = Scripts::new(text, None, None);
+        let result = result.add_postfix();
+        assert_eq!(
+            result.text,
+            String::from("Another popular scripture is John 3:16, it's quoted often.")
         )
     }
 
