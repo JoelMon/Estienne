@@ -2,6 +2,7 @@
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use ropey::{Rope, RopeSlice};
 
 type ScriptSlice = (Start, End);
 type Start = usize;
@@ -43,25 +44,19 @@ impl Scripts {
     }
     fn update(mut self) -> Self {
 
-        let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
-        let re: &regex::Regex = &RE;
-
-        for script in re.find_iter(self.text.as_str()) {
-            scrip_slices.push((script.start(), script.end()));
-        }
-
-       self.slice = scrip_slices;
-       self
-    }
-
-    pub(crate) fn add_prefix(mut self) -> Self {
-        let mut slice_copy = self.clone();
-
-        for i in 0..slice_copy.slice.len() {
-            
-            self.text.insert_str(slice_copy.slice[i].0, self.elements.prefix.as_deref().map_or("", |v| v));
-            slice_copy.update();
-            
+    fn add_prefix(mut self) -> Self {
+        for (e, i) in self.slice.iter().enumerate() {
+            if e == 0 {
+                self.text.insert_str(
+                    i.0,
+                    self.elements.prefix.as_ref().map_or("", |v| v.as_str()),
+                );
+            } else {
+                self.text.insert_str(
+                    i.0 + self.elements.prefix.unwrap().len(),
+                    self.elements.prefix.as_ref().map_or("", |v| v.as_str()),
+                );
+            }
         }
 
         self
@@ -126,13 +121,11 @@ mod test {
     #[test]
     fn t_add_element_prefix_single() {
         let text = "Another popular scripture is John 3:16, it's quoted often.".to_string();
-        let result = Scripts::new(text, Some("this is a prefix ".to_string()), None);
+        let result = Scripts::new(text, Some("[".to_string()), None);
         let result = result.add_prefix();
         assert_eq!(
             result.text,
-            String::from(
-                "Another popular scripture is this is a prefix John 3:16, it's quoted often."
-            )
+            String::from("Another popular scripture is [John 3:16, it's quoted often.")
         )
     }
 
@@ -174,6 +167,22 @@ mod test {
             result.text,
             String::from(
                 "Two popular scripture are [prefix]John 3:16 and [prefix]Matthew 24:14. They are quoted often."
+            )
+        )
+    }
+
+    #[test]
+    // Tests to make sure the prefix len is taken into consideration for each scripture found.
+    fn t_add_element_prefix_multi_3() {
+        let text = "Three popular scripture are John 3:16, Matthew 24:14 and also Psalms 83:18 . They are quoted often."
+            .to_string();
+        let result = Scripts::new(text, Some("=>".to_string()), None);
+        let result = result.add_prefix();
+
+        assert_eq!(
+            result.text,
+            String::from(
+                "Three popular scripture are =>John 3:16, =>Matthew 24:14 and also =>Psalms 83:18 . They are quoted often."
             )
         )
     }
