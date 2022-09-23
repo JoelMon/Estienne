@@ -1,15 +1,12 @@
-use parsers::souround::{self, Scripts};
+
 
 mod parsers;
 
-pub fn surround(text: String, prefix: Option<String>, postfix: Option<String>) -> (String, String) {
-    let original_text: String = text.clone();
+pub fn surround(text: String, prefix: Option<String>, postfix: Option<String>) -> String {
 
-    let new_text: String = parsers::souround::Scripts::new(text, prefix, postfix)
-        .add_postfix()
-        .add_prefix()
-        .get_text();
-    (original_text, new_text)
+    parsers::souround::Scribe::new(text, prefix, postfix)
+        .surround()
+        .get_text()
 }
 #[cfg(test)]
 mod test {
@@ -20,25 +17,25 @@ mod test {
         let input: String =
             "Another popular scripture is John 3:16, it's quoted often.".to_string();
         let expected: String =
-            "Another popular scripture is **John 3:16**, it's quoted often.".to_string();
+            "Another popular scripture is **John 3:16]], it's quoted often.".to_string();
         let result = surround(
             input.clone(),
             Some("**".to_string()),
-            Some("**".to_string()),
+            Some("]]".to_string()),
         );
-        assert_eq!(result, (input, expected))
+        assert_eq!(result, expected);
     }
 
     #[test]
     fn t_add_element_prefix_multi() {
         let input:String = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.".to_string();
-        let expected:String = "Other popular scriptures include **John 3:16**, **Matthew 24:14**, and **Psalm 83:18**, they are quoted often.".to_string();
+        let expected:String = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.".to_string();
 
         let result = surround(
             input.clone(),
             Some("**".to_string()),
-            Some("**".to_string()),
+            Some("]]".to_string()),
         );
-        assert_eq!(result, (input, expected))
+        assert_eq!(result, expected);
     }
 }
