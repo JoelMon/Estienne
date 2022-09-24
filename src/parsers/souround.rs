@@ -58,13 +58,9 @@ impl Scribe {
     }
 
     pub(crate) fn surround(mut self) -> Self {
-        let post_len = &self.elements.postfix_len.map_or(0, |v| v);
 
         for item in self.slice.iter().rev() {
-            // dbg!(&item);
 
-            dbg!(post_len);
-            dbg!(&item.0, &item.1);
             self.text.insert_str(
                 item.0 + (item.1-item.0),
                 self.elements.postfix.as_ref().map_or("", |v| v.as_str()),
