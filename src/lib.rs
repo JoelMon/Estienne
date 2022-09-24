@@ -19,7 +19,7 @@ mod test {
         let expected: String =
             "Another popular scripture is **John 3:16]], it's quoted often.".to_string();
         let result = surround(
-            input.clone(),
+            input,
             Some("**".to_string()),
             Some("]]".to_string()),
         );
@@ -32,7 +32,7 @@ mod test {
         let expected:String = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.".to_string();
 
         let result = surround(
-            input.clone(),
+            input,
             Some("**".to_string()),
             Some("]]".to_string()),
         );

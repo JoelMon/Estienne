@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables)]
+use std::string::String;
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -21,7 +21,7 @@ struct Elements {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Scribe {
+pub struct Scribe {
     text: String,
     slice: Vec<ScriptSlice>,
     elements: Elements,
@@ -37,37 +37,27 @@ impl Scribe {
             scrip_slices.push((script.start(), script.end()));
         }
 
-        let prefix_len = match &prefix {
-            Some(v) => Some(v.len()),
-            None => None,
-        };
+        let prefix_len = prefix.as_ref().map(String::len);
+        let postfix_len = postfix.as_ref().map(String::len);
 
-        let postfix_len = match &postfix {
-            Some(v) => Some(v.len()),
-            None => None,
-        };
-        Scribe {
+        Self {
             text,
             slice: scrip_slices,
-            elements: Elements {
-                prefix,
-                postfix,
-                prefix_len,
-                postfix_len,
-            },
+            elements: Elements { prefix, prefix_len, postfix, postfix_len },
         }
     }
 
+    #[allow(dead_code)]
     fn is_prefix(&self) -> bool {
         self.elements.prefix.is_some()
     }
 
+    #[allow(dead_code)]
     fn is_postfix(&self) -> bool {
         self.elements.postfix.is_some()
     }
 
     pub(crate) fn surround(mut self) -> Self {
-        let pre_len = &self.elements.prefix_len.map_or(0, |v| v);
         let post_len = &self.elements.postfix_len.map_or(0, |v| v);
 
         for item in self.slice.iter().rev() {
@@ -124,21 +114,21 @@ mod test {
     fn t_find_1() {
         let text = "A popular scripture is John 3:16.".to_string();
         let result = Scribe::new(text, None, None);
-        assert_eq!(result.slice, vec![(23, 32)])
+        assert_eq!(result.slice, vec![(23, 32)]);
     }
 
     #[test]
     fn t_find_2() {
         let text = "John 3:16 and Matthew 24:14".to_string();
         let result = Scribe::new(text, None, None);
-        assert_eq!(result.slice, vec![(0, 9), (14, 27)])
+        assert_eq!(result.slice, vec![(0, 9), (14, 27)]);
     }
 
     #[test]
     fn t_find_3() {
         let text = "John 3:16, Mathew 24:14, and Psalms 83:18 are commonly used.".to_string();
         let result = Scribe::new(text, None, None);
-        assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)])
+        assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)]);
     }
 
     #[test]
@@ -149,7 +139,7 @@ mod test {
         assert_eq!(
             result.text,
             String::from("Another popular scripture is [John 3:16, it's quoted often.")
-        )
+        );
     }
 
     #[test]
