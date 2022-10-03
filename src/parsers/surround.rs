@@ -11,57 +11,59 @@ lazy_static! {
     static ref RE: regex::Regex = Regex::new(r"(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)").expect("error while compiling the regex in surround");
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct Elements {
-    prefix: Option<&'static str>,
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Elements<'a> {
+    prefix: Option<&'a str>,
     prefix_len: Option<usize>,
-    postfix: Option<&'static str>,
+    postfix: Option<&'a str>,
     postfix_len: Option<usize>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Script {
-    elements: Elements,
+pub struct Script<'a> {
+    elements: Elements<'a>,
     slice: Vec<ScriptSlice>,
     text: String,
 }
 
 #[allow(unused_variables)]
-impl Script {
+impl<'a> Script<'a> {
     // Find all scriptures in a line and return the beginning index and length.
-    pub(crate) fn new<S>(
-        text: S,
-        prefix: Option<&'static str>,
-        postfix: Option<&'static str>,
-    ) -> Self
+    pub(crate) fn new<S>(text: S) -> Self
     where
         S: Into<String> + Clone,
     {
-        let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
         let re: &regex::Regex = &RE;
 
         // TODO: Fix this section of code. Too much cloning, find more concise exp.
         //       The use of Cow is due to regex requiring a &str but it is possible that
         //       `text` is `String` or `&str`, eliminating the use of the `as_str()` method.
-        let text_copy = text.clone();
+        let text_copy: S = text.clone();
         let text1: Cow<str> = Cow::from(text_copy.into());
-        for script in re.find_iter(Cow::borrow(&text1)) {
+        let matches = re.find_iter(Cow::borrow(&text1));
+
+        let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
+        for script in matches {
             scrip_slices.push((script.start(), script.end()));
         }
-
-        let prefix_len = prefix.map(|x| x.len());
-        let postfix_len = postfix.map(|x| x.len());
 
         Self {
             text: text.into(),
             slice: scrip_slices,
             elements: Elements {
-                prefix,
-                prefix_len,
-                postfix,
-                postfix_len,
+                ..Default::default()
             },
         }
+    }
+
+    pub fn prefix(mut self, prefix: &'a str) -> Self {
+        self.elements.prefix = Some(prefix);
+        self
+    }
+
+    pub fn postfix(mut self, postfix: &'a str) -> Self {
+        self.elements.postfix = Some(postfix);
+        self
     }
 
     #[allow(dead_code)]
@@ -96,7 +98,6 @@ impl Script {
         self.text
     }
 
-    #[allow(dead_code)]
     /// Returns a list of scriptures.
     pub(crate) fn get_scripture(self) -> Vec<String> {
         let mut scripture_list: Vec<String> = Vec::new();
@@ -120,9 +121,8 @@ mod test {
     #[test]
     fn t_is_prefix() {
         let text: &str = "Testing";
-        let prefix: Option<&str> = Some("true");
-        let result_true: Script = Script::new(text, prefix, None);
-        let result_false: Script = Script::new(text, None, None);
+        let result_true: Script = Script::new(text).prefix("true");
+        let result_false: Script = Script::new(text); // Defaults to `None`.
 
         assert!(result_true.is_prefix());
         assert!(!result_false.is_prefix());
@@ -131,51 +131,34 @@ mod test {
     #[test]
     fn t_is_postfix() {
         let text: &str = "Testing";
-        let postfix: Option<&str> = Some("true");
-        let result_true: Script = Script::new(text, None, postfix);
-        let result_false: Script = Script::new(text, None, None);
+        let result_true: Script = Script::new(text).postfix("true");
+        let result_false: Script = Script::new(text); // Defaults to `None`.
 
         assert!(result_true.is_postfix());
         assert!(!result_false.is_postfix());
     }
 
     #[test]
-    fn t_find_1() {
+    fn t_find_slice_1() {
         let text: &str = "A popular scripture is John 3:16.";
         let expect: Vec<(usize, usize)> = vec![(23, 32)];
-        let result: Script = Script::new(text, None, None);
+        let result: Script = Script::new(text);
         assert_eq!(result.slice, expect);
     }
 
     #[test]
-    fn t_find_2() {
+    fn t_find_slice_2() {
         let text: &str = "John 3:16 and Matthew 24:14";
         let expect: Vec<(usize, usize)> = vec![(0, 9), (14, 27)];
-        let result: Script = Script::new(text, None, None);
+        let result: Script = Script::new(text);
         assert_eq!(result.slice, expect);
     }
 
     #[test]
-    fn t_find_3() {
+    fn t_find_slice_3() {
         let text: &str = "John 3:16, Mathew 24:14, and Psalms 83:18 are commonly used.";
-        let result: Script = Script::new(text, None, None);
+        let result: Script = Script::new(text);
         assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)]);
-    }
-
-    #[test]
-    fn t_add_element_prefix_single() {
-        let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
-        let result: String = Script::new(text, Some("["), None).surround().get_text();
-        assert_eq!(result, expect);
-    }
-
-    #[test]
-    fn t_add_element_prefix_single_to_string() {
-        let text: String = "Another popular scripture is John 3:16, it's quoted often.".to_string();
-        let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
-        let result: String = Script::new(text, Some("["), None).surround().get_text();
-        assert_eq!(result, expect);
     }
 
     #[test]
@@ -183,58 +166,41 @@ mod test {
     fn t_add_element_prefix_single_none() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let result: String = Script::new(text, None, None).surround().get_text();
+        let result: String = Script::new(text).surround().get_text();
         assert_eq!(result, expect)
     }
 
     #[test]
-    fn t_add_element_prefix_multi_1() {
-        let text: &str =
-            "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often.";
-        let expect: &str =
-            "Two popular scripture are [John 3:16 and [Matthew 24:14. They are quoted often.";
-        let result: String = Script::new(text, Some("["), None).surround().get_text();
-        assert_eq!(result, expect)
+    fn t_add_element_prefix_single() {
+        let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
+        let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
+        let result: String = Script::new(text).prefix("[").surround().get_text();
+        assert_eq!(result, expect);
+    }
+
+    #[test]
+    fn t_add_element_prefix_single_to_string() {
+        let text: String = "Another popular scripture is John 3:16, it's quoted often.".to_string();
+        let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
+        let result: String = Script::new(text).prefix("[").surround().get_text();
+        assert_eq!(result, expect);
     }
 
     #[test]
     // Tests to make sure the prefix len is taken into consideration for each scripture found.
-    fn t_add_element_prefix_multi_2() {
+    fn t_add_element_prefix_multi() {
         let text: &str =
             "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: &str = "Two popular scripture are [prefix]John 3:16 and [prefix]Matthew 24:14. They are quoted often.";
-        let result: String = Script::new(text, Some("[prefix]"), None)
-            .surround()
-            .get_text();
+        let result: String = Script::new(text).prefix("[prefix]").surround().get_text();
         assert_eq!(result, expect)
     }
 
     #[test]
-    // Tests to make sure the prefix len is taken into consideration for each scripture found.
-    fn t_add_element_prefix_multi_3() {
-        let text: &str = "Three popular scripture are John 3:16, Matthew 24:14 and also Psalms 83:18 . They are quoted often.";
-        let expect: &str = "Three popular scripture are =>John 3:16, =>Matthew 24:14 and also =>Psalms 83:18 . They are quoted often.";
-        let result: String = Script::new(text, Some("=>"), None).surround().get_text();
-
-        assert_eq!(result, expect)
-    }
-
-    #[test]
-    fn t_add_element_postfix() {
+    fn t_add_element_postfix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16[postfix], it's quoted often.";
-        let result: String = Script::new(text, None, Some("[postfix]"))
-            .surround()
-            .get_text();
-        assert_eq!(result, expect)
-    }
-
-    #[test]
-    // Tests to make sure the prefix len is taken into consideration for each scripture found.
-    fn t_add_element_postfix_single_none() {
-        let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let expect: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let result: String = Script::new(text, None, None).surround().get_text();
+        let result: String = Script::new(text).postfix("[postfix]").surround().get_text();
         assert_eq!(result, expect)
     }
 
@@ -243,9 +209,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Mathew 24:14. They are quoted often.";
         let expect: &str = "Two popular scriptures are John 3:16[postfix] and Mathew 24:14[postfix]. They are quoted often.";
-        let result: String = Script::new(text, None, Some("[postfix]"))
-            .surround()
-            .get_text();
+        let result: String = Script::new(text).postfix("[postfix]").surround().get_text();
         assert_eq!(result, expect)
     }
 
@@ -254,7 +218,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
-        let result: Vec<String> = Script::new(text, None, None).get_scripture();
+        let result: Vec<String> = Script::new(text).get_scripture();
         assert_eq!(result, expect)
     }
 }
