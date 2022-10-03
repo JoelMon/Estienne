@@ -13,7 +13,8 @@
 //!
 //!## The Name
 //!The library is named after Robert Estienne, a French theologian of the early Christian era. 
-//!He is best remembered for being the first to print the New Testament divided with numbered verses. [Read More](https://www.jw.org/finder?wtlocale=E&docid=2016167&srctype=wol&srcid=share&par=14)
+//!He is best remembered for being the first to print the New Testament divided with numbered verses. 
+//![Read More](https://www.jw.org/finder?wtlocale=E&docid=2016167&srctype=wol&srcid=share&par=14)
 //!
 //!## The Purpose
 //!The purpose of the library is to provide a simple way to manipulate Biblical verses within a line of text. 
