@@ -1,24 +1,22 @@
 mod parsers;
 
+/// The markup formats supported.
+pub enum Markup {
+    Markdown,
+}
+
 /// Adds the prefix and postfix around each scripture.
-pub fn surround(text: String, prefix: Option<String>, postfix: Option<String>) -> String {
-    parsers::souround::Scribe::new(text, prefix, postfix)
+pub fn surround<S>(text: S, prefix: Option<&'static str>, postfix: Option<&'static str>) -> String
+where
+    S: Into<String> + Clone,
+{
+    parsers::surround::Script::new(text, prefix, postfix)
         .surround()
         .get_text()
 }
 
-/// Adds the prefix around each scripture.
-pub fn prefix(text: String, prefix: Option<String>) -> String {
-    parsers::souround::Scribe::new(text, prefix, None)
-        .surround()
-        .get_text()
-}
-
-/// Adds the postfix around each scripture.
-pub fn postfix(text: String, postfix: Option<String>) -> String {
-    parsers::souround::Scribe::new(text, None, postfix)
-        .surround()
-        .get_text()
+pub fn get_scripture() -> Vec<&'static str> {
+    todo!()
 }
 
 #[cfg(test)]
@@ -27,61 +25,34 @@ mod test {
 
     #[test]
     fn t_add_element_prefix_single() {
-        let input: String =
-            "Another popular scripture is John 3:16, it's quoted often.".to_string();
-        let expected: String =
-            "Another popular scripture is **John 3:16]], it's quoted often.".to_string();
-        let result = surround(input, Some("**".to_string()), Some("]]".to_string()));
+        let input: &str = "Another popular scripture is John 3:16, it's quoted often.";
+        let expected: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
+        let result = surround(input, Some("**"), Some("]]"));
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    // Test if a String can be passed in as input.
+    fn t_add_element_prefix_single_to_string() {
+        let input: String = "Another popular scripture is John 3:16, it's quoted often.".into();
+        let expected: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
+        let result = surround(input, Some("**"), Some("]]"));
         assert_eq!(result, expected);
     }
 
     #[test]
     fn t_add_element_prefix_multi() {
-        let input:String = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.".to_string();
-        let expected:String = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.".to_string();
-
-        let result = surround(input, Some("**".to_string()), Some("]]".to_string()));
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn t_prefix_multi_1() {
-        let input:String = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.".to_string();
-        let expected:String = "Other popular scriptures include **John 3:16, **Matthew 24:14, and **Psalm 83:18, they are quoted often.".to_string();
-        let result = prefix(input, Some("**".to_string()));
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn t_postfix_multi_1() {
-        let input:String = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.".to_string();
-        let expected:String = "Other popular scriptures include John 3:16**, Matthew 24:14**, and Psalm 83:18**, they are quoted often.".to_string();
-        let result = postfix(input, Some("**".to_string()));
+        let input:&str = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.";
+        let expected:&str = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.";
+        let result = surround(input, Some("**"), Some("]]"));
         assert_eq!(result, expected);
     }
 
     #[test]
     fn t_add_element_prefix_multi_noscripts() {
-        let input:String = "There are not scriptures in this line.".to_string();
-        let expected:String = "There are not scriptures in this line.".to_string();
-
-        let result = surround(input, Some("**".to_string()), Some("]]".to_string()));
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn t_prefix_multi_1_noscripts() {
-        let input:String = "There are not scriptures in this line.".to_string();
-        let expected:String = "There are not scriptures in this line.".to_string();
-        let result = prefix(input, Some("**".to_string()));
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn t_postfix_multi_1_noscripts() {
-        let input:String = "There are not scriptures in this line.".to_string();
-        let expected:String = "There are not scriptures in this line.".to_string();
-        let result = postfix(input, Some("**".to_string()));
+        let input: &str = "There are not scriptures in this line.";
+        let expected: &str = "There are not scriptures in this line.";
+        let result = surround(input, Some("**"), Some("]]"));
         assert_eq!(result, expected);
     }
 }
