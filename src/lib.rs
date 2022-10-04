@@ -31,6 +31,7 @@
 
 
 mod parsers;
+mod locales;
 
 /// The markup formats supported.
 pub enum Markup {
