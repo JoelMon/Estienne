@@ -27,3 +27,4 @@ The API will allow for easy manipulations of the verses, such as:
 ## Contributing
 Contributions are welcomed, but please be aware that the project is still in its prototype phase and large portions of code might change at any moment. 
 Feel free to open an issue if you have any questions or suggestions.
+

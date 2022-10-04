@@ -32,6 +32,7 @@
 
 mod parsers;
 mod locales;
+mod url;
 
 /// The markup formats supported.
 pub enum Markup {
