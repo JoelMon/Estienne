@@ -1,4 +1,4 @@
-use crate::locales::en_us::book;
+use crate::locales::en_us::BOOKS;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -10,7 +10,7 @@ lazy_static! {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Bible<'a> {
+pub struct Bible<'a> {
     book: &'a str,
     chapter: &'a str,
     verse: &'a str,
@@ -18,13 +18,32 @@ pub(crate) struct Bible<'a> {
 
 #[allow(unused)]
 impl<'a> Bible<'a> {
+    pub(crate) fn single_scripture(book: &'a str, chapter: &'a str, verse: &'a str) -> Bible {
+        Bible {
+            book,
+            chapter,
+            verse,
+        }
+    }
+    pub(crate) fn get_book(&self) -> &'a str {
+        self.book
+    }
+
+    pub(crate) fn get_chapter(&self) -> &'a str {
+        self.chapter
+    }
+
+    pub(crate) fn get_verse(&self) -> &'a str {
+        self.verse
+    }
+
     pub(crate) fn parse(scripture: Vec<&'a str>) -> Vec<Bible> {
         let re: &RE = &RE;
 
-        let book_list: [&str; 66] = book();
+        let book_list = BOOKS;
 
         //Find Books from list and build a vec of valid scriptures
-        let cap: Vec<Bible> = scripture
+        let all_scriptures: Vec<Bible> = scripture
             .iter()
             .map(|scripture| re.captures(scripture).unwrap())
             // Filter out anything that had the pattern of a scripture but is not contained in locales' books().
@@ -38,14 +57,14 @@ impl<'a> Bible<'a> {
                         .as_str(),
                 )
             }) //Improve this
-            .map(|book| Bible {
-                book: book.name("book").unwrap().as_str(),
-                chapter: book.name("chapter").unwrap().as_str(),
-                verse: book.name("verse").unwrap().as_str(),
+            .map(|scripture| Bible {
+                book: scripture.name("book").unwrap().as_str(),
+                chapter: scripture.name("chapter").unwrap().as_str(),
+                verse: scripture.name("verse").unwrap().as_str(),
             })
             .collect();
 
-        cap
+        all_scriptures
     }
 }
 
@@ -97,7 +116,7 @@ mod test {
 
     #[test]
     // Two scriptures, letter to Timothy is prefixed with a number
-    fn t_find_book_two_space() {
+    fn t_find_book_two() {
         let input: Vec<&str> = vec!["Matthew 24:14", "Psalms 83:18"];
         let expect: Vec<Bible> = vec![
             Bible {
