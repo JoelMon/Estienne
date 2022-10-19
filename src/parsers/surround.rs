@@ -76,8 +76,9 @@ impl<'a> Script<'a> {
         self.elements.postfix.is_some()
     }
 
-    // TODO: Document this, in a few weeks I'll forget why it's rev.
+    /// The surround method adds a prefix and postfix when the corresponding methods are used.
     pub(crate) fn surround(mut self) -> Self {
+        // .rev method is used to avoid dealing with the changing size of the string.
         for item in self.slice.iter().rev() {
             self.text.insert_str(
                 item.0 + (item.1 - item.0),
@@ -93,7 +94,7 @@ impl<'a> Script<'a> {
         self
     }
 
-    /// Returns the text.
+    /// Returns the text field of the Script struct.
     pub(crate) fn get_text(self) -> String {
         self.text
     }
@@ -117,6 +118,7 @@ impl<'a> Script<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn t_is_prefix() {
@@ -159,6 +161,18 @@ mod test {
         let text: &str = "John 3:16, Mathew 24:14, and Psalms 83:18 are commonly used.";
         let result: Script = Script::new(text);
         assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)]);
+    }
+
+    #[test]
+    fn t_single_scripture() {
+        let text: &str = "John 3:16";
+        let expect: &str = "[John 3:16]";
+        let got: String = Script::new(text)
+            .prefix("[")
+            .postfix("]")
+            .surround()
+            .get_text();
+        assert_eq!(got, expect);
     }
 
     #[test]

@@ -1,4 +1,3 @@
-use crate::locales::en_us::BOOK_INDEX;
 use crate::parsers::scripture::Bible;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -18,7 +17,7 @@ pub trait Url {
     /// Returns the template to the URL.
     fn get_template(&self) -> String;
 
-    // Constructs the proper URL from `url_template`
+    /// Constructs the proper URL from `url_template`
     fn get_url(&self, scripture: Bible) -> String {
         let url: String = crate::url::BOOKNAME
             .replace(&self.get_template(), scripture.get_book())
