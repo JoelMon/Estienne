@@ -1,4 +1,3 @@
-use crate::locales::en_us::BOOK_INDEX;
 use crate::parsers::scripture::Bible;
 use lazy_static::lazy_static;
 use regex::Regex;
