@@ -20,8 +20,8 @@ pub struct Bible<'a> {
 
 #[allow(unused)]
 impl<'a> Bible<'a> {
-    // Creates a Bible with a single scripture.
-    pub(crate) fn single_scripture(book: &'a str, chapter: &'a str, verse: &'a str) -> Bible {
+    /// Creates a Bible with a single scripture.
+    pub(crate) fn single_scripture(book: &'a str, chapter: &'a str, verse: &'a str) -> Bible<'a> {
         Bible {
             book,
             chapter,
