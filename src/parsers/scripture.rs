@@ -51,7 +51,7 @@ impl<'a> Bible<'a> {
             .iter()
             .map(|scripture| re.captures(scripture).unwrap())
             // Filter out anything that had the pattern of a scripture but is not contained in locales' books().
-            .filter(|captures| Book::is_valid(&captures.name("book").unwrap().as_str())) //Improve this
+            .filter(|captures| Book::is_valid(captures.name("book").unwrap().as_str())) //Improve this
             .map(|scripture| -> Bible {
                 Bible {
                     book: scripture.name("book").unwrap().as_str(),
