@@ -76,7 +76,7 @@ impl TryFrom<&str> for Book {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
-            "genesis" => Ok(Book::Genesis),
+            "genesis" | "gen" | "gn" => Ok(Book::Genesis),
             "exodus" => Ok(Book::Exodus),
             "leviticus" => Ok(Book::Leviticus),
             "numbers" => Ok(Book::Numbers),
@@ -193,6 +193,14 @@ mod test {
         let expect = 1;
         let got = Book::get_index("genesis").unwrap();
         assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn test_genesis_abbr_enum() {
+        let expect = 1;
+        let got1 = Book::get_index("gen").unwrap();
+        let got2 = Book::get_index("gn").unwrap();
+        assert_eq!((got1, got2), (expect, expect));
     }
 
     #[test]
