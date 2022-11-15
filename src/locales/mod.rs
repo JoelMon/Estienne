@@ -1,5 +1,4 @@
 pub mod en_us;
-pub mod es_sp;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
