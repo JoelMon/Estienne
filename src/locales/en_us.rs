@@ -151,7 +151,6 @@ impl BibleRef for Book {
     fn get_index(book: &str) -> Result<u8, BibleError> {
         let i: Result<Book, String> = book.try_into();
 
-        
         match i {
             Ok(book) => Ok(book as u8),
             Err(e) => Err(BibleError::BookNotFound(e)),
