@@ -2,6 +2,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::{Borrow, Cow};
 
+use crate::{locales::en_us::Site, url::Url};
+
+use super::scripture::Bible;
+
 type ScriptSlice = (Start, End);
 type Start = usize;
 type End = usize;
@@ -82,13 +86,16 @@ impl<'a> Script<'a> {
         for item in self.slice.iter().rev() {
             self.text.insert_str(
                 item.0 + (item.1 - item.0),
-                self.elements.postfix.map_or("", |postfix_value| postfix_value),
+                self.elements
+                    .postfix
+                    .map_or("", |postfix_value| postfix_value),
             );
 
-            self.text
-                .insert_str(item.0, self.elements.prefix.map_or("", |prefix_value| prefix_value));
+            self.text.insert_str(
+                item.0,
+                self.elements.prefix.map_or("", |prefix_value| prefix_value),
+            );
 
-            dbg!(&self.text);
         }
 
         self
@@ -97,15 +104,19 @@ impl<'a> Script<'a> {
     pub(crate) fn url(mut self) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for item in self.slice.iter().rev() {
+
+            let verse = Bible::parse(vec!(self.get_from_slice(item).as_str()));
+            let site = Site::JwOrg;
+            let url = site.get_url(todo!());
+
             self.text.insert_str(
                 item.0 + (item.1 - item.0),
-                self.elements.postfix.map_or("", |v| v),
+                format!("]({})", "cool").as_str(),
             );
 
             self.text
                 .insert_str(item.0, self.elements.prefix.map_or("", |v| v));
 
-            dbg!(&self.text);
         }
 
         self
@@ -114,6 +125,15 @@ impl<'a> Script<'a> {
     /// Returns the text field of the Script struct.
     pub(crate) fn get_text(self) -> String {
         self.text
+    }
+
+    // Returns a `String` to avoid borrowing headaches
+    pub(crate) fn get_from_slice(&self, slice: &(usize, usize)) -> String {
+        let foo = self.clone();
+        let text = foo.get_text();
+        let slice = text[slice.0..slice.1].to_owned();
+
+        slice
     }
 
     /// Returns a list of scriptures.
@@ -243,7 +263,7 @@ mod test {
         let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
         assert_eq!(got, expect)
     }
-    
+
     #[test]
     fn t_single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
@@ -260,5 +280,13 @@ mod test {
         let got: Vec<String> = Script::new(text).get_scripture();
         assert_eq!(got, expect)
     }
-
+    
+    #[test]
+    fn t_get_from_slice() {
+        let text: &str =
+            "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
+        let expect = "popular".to_string();
+        let got: String = Script::new(text).get_from_slice(&(4, 11));
+        assert_eq!(got, expect)
+    }
 }

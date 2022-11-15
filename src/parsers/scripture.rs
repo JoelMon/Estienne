@@ -41,6 +41,7 @@ impl<'a> Bible<'a> {
         self.verse
     }
 
+    // TODO: Might need to be vecs
     pub(crate) fn parse(scripture: Vec<&'a str>) -> Vec<Bible> {
         let re: &RE = &RE;
 
@@ -87,8 +88,8 @@ mod test {
             verse: "16",
             booknum: "0".into(),
         }];
-        let result: Vec<Bible> = Bible::parse(input);
-        assert_eq!(result, expect);
+        let got: Vec<Bible> = Bible::parse(input);
+        assert_eq!(got, expect);
     }
 
     #[test]
