@@ -82,17 +82,16 @@ pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: 
 }
 
 /// Links scriptures found to a online Bible.
-pub fn url<S: Into<String> + Clone>(
-    locales: Locale,
-    site: Site,
-    markup: Markup,
-    text: S,
-) -> String {
-    todo!()
+pub fn url<S: Into<String> + Clone>(site: Site, text: S) -> String {
+    parsers::surround::Script::new(text)
+        .url(Locale::en_us, site)
+        .get_text()
 }
 
 #[cfg(test)]
 mod test {
+    use crate::parsers::surround::Script;
+
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -111,6 +110,14 @@ mod test {
         let expect = &Locale::en_us;
         let got = Locale::get();
         assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn t_revelations_url() {
+        let text: &str = "A popular scriptures is Rev 12:12. It is quoted often.";
+        let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
+        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
+        assert_eq!(got, expect)
     }
 
     #[test]

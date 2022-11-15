@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::{Borrow, Cow};
 
-use crate::{locales::en_us::Site, url::Url};
+use crate::{locales::en_us::Site, url::Url, Locale};
 
 use super::scripture::Bible;
 
@@ -100,14 +100,12 @@ impl<'a> Script<'a> {
         self
     }
     /// Returns the original string with URL markup for all scriptures.
-    pub(crate) fn url(mut self) -> Self {
+    pub(crate) fn url(mut self, locale: Locale, site: Site) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for item in self.slice.iter().rev() {
-            let verse = self.get_from_slice(item);
-            let foo = Bible::parse(verse.as_str());
-            // let verse = Bible::parse(thing.get_from_slice(item).as_str());
-            let site = Site::JwOrg;
-            let url = site.get_url(&foo);
+            let verse_slice = self.get_from_slice(item);
+            let bible = Bible::parse(verse_slice.as_str());
+            let url = site.get_url(&bible);
 
             self.text
                 .insert_str(item.0 + (item.1 - item.0), format!("]({})", url).as_str());
@@ -264,7 +262,15 @@ mod test {
     fn t_single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/John/3/#v43003016). It is quoted often.".to_string();
-        let got: String = Script::new(text).url().get_text();
+        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_single_url_abbr() {
+        let text: &str = "A popular scriptures is Joh 3:16. It is quoted often.";
+        let expect: String = "A popular scriptures is [Joh 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
+        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 

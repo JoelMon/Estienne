@@ -1,4 +1,6 @@
-use crate::parsers::scripture::Bible;
+use std::array::try_from_fn;
+
+use crate::{parsers::scripture::Bible, Locale, locales::en_us::Book};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -19,6 +21,10 @@ pub trait Url {
 
     /// Constructs the proper URL from `url_template`
     fn get_url(&self, scripture: &Bible) -> String {
+
+        let book_name:Book= scripture.get_book().try_into().unwrap();
+        let book_name:&str= book_name.try_into().unwrap();
+
         let url: String = crate::url::BOOKNAME
             .replace(&self.get_template(), scripture.get_book())
             .into();
@@ -74,6 +80,16 @@ mod test {
     #[test]
     fn test_get_url_jw_org_john() {
         let scripture: Bible = Bible::single_scripture("john", "3", "16");
+        let site: Site = Site::JwOrg;
+        let got: String = site.get_url(&scripture);
+        let expect: String =
+            "https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016".into();
+        assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn test_get_url_jw_org_john_abbr() {
+        let scripture: Bible = Bible::single_scripture("joh", "3", "16");
         let site: Site = Site::JwOrg;
         let got: String = site.get_url(&scripture);
         let expect: String =

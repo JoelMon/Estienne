@@ -1,5 +1,7 @@
-use crate::locales::en_us::Book;
-use crate::locales::BibleRef;
+use crate::{
+    locales::{self, en_us::Book, BibleRef},
+    Locale,
+};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -29,6 +31,7 @@ impl<'a> Bible<'a> {
             booknum: Default::default(),
         }
     }
+    //FIX
     pub(crate) fn get_book(&self) -> &'a str {
         self.book
     }
@@ -48,7 +51,7 @@ impl<'a> Bible<'a> {
     pub(crate) fn parse(scripture: &'a str) -> Bible {
         let re: &RE = &RE;
 
-        let foo = match Book::is_valid(
+        let scripture = match Book::is_valid(
             re.captures(scripture)
                 .unwrap()
                 .name("book")
@@ -64,12 +67,12 @@ impl<'a> Bible<'a> {
         };
 
         Self {
-            book: foo.name("book").unwrap().as_str(),
-            booknum: Book::get_index(foo.name("book").unwrap().as_str())
+            book: scripture.name("book").unwrap().as_str(),
+            booknum: Book::get_index(scripture.name("book").unwrap().as_str())
                 .unwrap()
                 .to_string(),
-            chapter: foo.name("chapter").unwrap().as_str(),
-            verse: foo.name("verse").unwrap().as_str(),
+            chapter: scripture.name("chapter").unwrap().as_str(),
+            verse: scripture.name("verse").unwrap().as_str(),
         }
     }
 }
