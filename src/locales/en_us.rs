@@ -76,7 +76,7 @@ impl TryFrom<&str> for Book {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
-            "genesis" => Ok(Book::Genesis),
+            "genesis" | "gn" => Ok(Book::Genesis),
             "exodus" => Ok(Book::Exodus),
             "leviticus" => Ok(Book::Leviticus),
             "numbers" => Ok(Book::Numbers),
@@ -118,7 +118,7 @@ impl TryFrom<&str> for Book {
             "matthew" => Ok(Book::Matthew),
             "mark" => Ok(Book::Mark),
             "luke" => Ok(Book::Luke),
-            "john" => Ok(Book::John),
+            "john" | "joh" => Ok(Book::John),
             "acts" => Ok(Book::Acts),
             "romans" => Ok(Book::Romans),
             "1 corinthians" => Ok(Book::FirstCorinthians),
@@ -141,8 +141,81 @@ impl TryFrom<&str> for Book {
             "2 john" => Ok(Book::SecondJohn),
             "3 john" => Ok(Book::ThirdJohn),
             "jude" => Ok(Book::Jude),
-            "revelation" => Ok(Book::Revelation),
+            "revelation" | "rev" => Ok(Book::Revelation),
             _ => Err(value.to_string()),
+        }
+    }
+}
+
+impl From<Book> for &str {
+    fn from(value: Book) -> Self {
+        match value {
+            Book::Genesis => "genesis",
+            Book::Exodus => "exodus",
+            Book::Leviticus => "leviticus",
+            Book::Numbers => "numbers",
+            Book::Deuteronomy => "deuteronomy",
+            Book::Joshua => "joshua",
+            Book::Judges => "judges",
+            Book::Ruth => "ruth",
+            Book::FirstSamuel => "1 samuel",
+            Book::SecondSamuel => "2 samuel",
+            Book::FirstKings => "1 kings",
+            Book::SecondKings => "2 kings",
+            Book::FirstChronicles => "1 chronicles",
+            Book::SecondChronicles => "2 chronicles",
+            Book::Ezra => "ezra",
+            Book::Nehemiah => "nehemiah",
+            Book::Esther => "esther",
+            Book::Job => "job",
+            Book::Psalms => "psalms",
+            Book::Proverbs => "proverbs",
+            Book::Ecclesiastes => "ecclesiastes",
+            Book::SongOfSolomon => "song of solomon",
+            Book::Isaiah => "isaiah",
+            Book::Jeremiah => "jeremiah",
+            Book::Lamentations => "lamentations",
+            Book::Ezekiel => "ezekiel",
+            Book::Daniel => "daniel",
+            Book::Hosea => "hosea",
+            Book::Joel => "joel",
+            Book::Amos => "amos",
+            Book::Obadiah => "obadiah",
+            Book::Jonah => "jonah",
+            Book::Micah => "micah",
+            Book::Nahum => "nahum",
+            Book::Habakkuk => "habakkuk",
+            Book::Zephaniah => "zephaniah",
+            Book::Haggai => "haggai",
+            Book::Zechariah => "zechariah",
+            Book::Malachi => "malachi",
+            Book::Matthew => "matthew",
+            Book::Mark => "mark",
+            Book::Luke => "luke",
+            Book::John => "john",
+            Book::Acts => "acts",
+            Book::Romans => "romans",
+            Book::FirstCorinthians => "1 corinthians",
+            Book::SecondCorinthians => "2 corinthians",
+            Book::Galatians => "galatians",
+            Book::Ephesians => "ephesians",
+            Book::Philippians => "philippians",
+            Book::Colossians => "colossians",
+            Book::FirstThessalonians => "1 thessalonians",
+            Book::SecondThessalonians => "2 thessalonians",
+            Book::FirstTimothy => "1 timothy",
+            Book::SecondTimothy => "2 timothy",
+            Book::Titus => "titus",
+            Book::Philemon => "philemon",
+            Book::Hebrews => "hebrews",
+            Book::James => "james",
+            Book::FirstPeter => "1 peter",
+            Book::SecondPeter => "2 peter",
+            Book::FirstJohn => "1 john",
+            Book::SecondJohn => "2 john",
+            Book::ThirdJohn => "3 john",
+            Book::Jude => "jude",
+            Book::Revelation => "revelation",
         }
     }
 }
@@ -151,13 +224,13 @@ impl BibleRef for Book {
     fn get_index(book: &str) -> Result<u8, BibleError> {
         let i: Result<Book, String> = book.try_into();
 
-        let index = match i {
+        match i {
             Ok(book) => Ok(book as u8),
             Err(e) => Err(BibleError::BookNotFound(e)),
-        };
-        index
+        }
     }
 
+    /// True if `&str` is a valid book of the Bible.
     fn is_valid(book: &str) -> bool {
         let v: Result<Book, String> = book.try_into();
 
@@ -197,9 +270,23 @@ mod test {
     }
 
     #[test]
+    fn test_genesis_abbr_enum() {
+        let expect = 1;
+        let got = Book::get_index("gn").unwrap();
+        assert_eq!(got, expect);
+    }
+
+    #[test]
     fn test_matthew_index() {
         let expect: u8 = 40;
         let result: u8 = Book::get_index("Matthew").unwrap();
+        assert_eq!(result as u8, expect);
+    }
+
+    #[test]
+    fn test_john_abbr() {
+        let expect: u8 = 43;
+        let result: u8 = Book::get_index("joh").unwrap();
         assert_eq!(result as u8, expect);
     }
 

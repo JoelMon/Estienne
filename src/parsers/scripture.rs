@@ -1,5 +1,6 @@
-use crate::locales::en_us::Book;
-use crate::locales::BibleRef;
+use crate::{
+    locales::{en_us::Book, BibleRef},
+};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -29,6 +30,7 @@ impl<'a> Bible<'a> {
             booknum: Default::default(),
         }
     }
+    //FIX
     pub(crate) fn get_book(&self) -> &'a str {
         self.book
     }
@@ -41,30 +43,36 @@ impl<'a> Bible<'a> {
         self.verse
     }
 
-    pub(crate) fn parse(scripture: Vec<&'a str>) -> Vec<Bible> {
+    pub(crate) fn get_i(&self) -> u8 {
+        Book::get_index(self.book).expect("expected a valid book")
+    }
+
+    pub(crate) fn parse(scripture: &'a str) -> Bible {
         let re: &RE = &RE;
 
-        let book_list = ["Matthew"];
+        let scripture = match Book::is_valid(
+            re.captures(scripture)
+                .unwrap()
+                .name("book")
+                .unwrap()
+                .as_str(),
+        ) {
+            true => re.captures(scripture).unwrap(),
 
-        // Find Books from list and build a vec of valid scriptures
-        let all_scriptures: Vec<Bible> = scripture
-            .iter()
-            .map(|scripture| re.captures(scripture).unwrap())
-            // Filter out anything that had the pattern of a scripture but is not contained in locales' books().
-            .filter(|captures| Book::is_valid(&captures.name("book").unwrap().as_str())) //Improve this
-            .map(|scripture| -> Bible {
-                Bible {
-                    book: scripture.name("book").unwrap().as_str(),
-                    booknum: Book::get_index(scripture.name("book").unwrap().as_str())
-                        .unwrap()
-                        .to_string(),
-                    chapter: scripture.name("chapter").unwrap().as_str(),
-                    verse: scripture.name("verse").unwrap().as_str(),
-                }
-            })
-            .collect();
+            false => {
+                //TODO: Improve this with Errors
+                panic!();
+            }
+        };
 
-        all_scriptures
+        Self {
+            book: scripture.name("book").unwrap().as_str(),
+            booknum: Book::get_index(scripture.name("book").unwrap().as_str())
+                .unwrap()
+                .to_string(),
+            chapter: scripture.name("chapter").unwrap().as_str(),
+            verse: scripture.name("verse").unwrap().as_str(),
+        }
     }
 }
 
@@ -80,62 +88,40 @@ mod test {
     #[should_panic]
     // Should panic because this book should have been filtered out
     fn t_non_existing_book() {
-        let input: Vec<&str> = vec!["Mary 3:16"];
-        let expect: Vec<Bible> = vec![Bible {
+        let input: &str = "Mary 3:16";
+        let expect: Bible = Bible {
             book: "Mary",
             chapter: "3",
             verse: "16",
             booknum: "0".into(),
-        }];
-        let result: Vec<Bible> = Bible::parse(input);
-        assert_eq!(result, expect);
+        };
+        let got: Bible = Bible::parse(input);
+        assert_eq!(got, expect);
     }
 
     #[test]
     fn t_find_book() {
-        let input: Vec<&str> = vec!["John 3:16"];
-        let expect: Vec<Bible> = vec![Bible {
+        let input: &str = "John 3:16";
+        let expect: Bible = Bible {
             book: "John",
             chapter: "3",
             verse: "16",
             booknum: "43".into(),
-        }];
-        let result: Vec<Bible> = Bible::parse(input);
+        };
+        let result: Bible = Bible::parse(input);
         assert_eq!(result, expect);
     }
 
     #[test]
     fn t_find_book_space() {
-        let input: Vec<&str> = vec!["1 Timothy 3:16"];
-        let expect: Vec<Bible> = vec![Bible {
+        let input: &str = "1 Timothy 3:16";
+        let expect: Bible = Bible {
             book: "1 Timothy",
             chapter: "3",
             verse: "16",
             booknum: "54".into(),
-        }];
-        let result: Vec<Bible> = Bible::parse(input);
-        assert_eq!(result, expect);
-    }
-
-    #[test]
-    // Two scriptures, letter to Timothy is prefixed with a number
-    fn t_find_book_two() {
-        let input: Vec<&str> = vec!["Matthew 24:14", "Psalms 83:18"];
-        let expect: Vec<Bible> = vec![
-            Bible {
-                book: "Matthew",
-                chapter: "24",
-                verse: "14",
-                booknum: "40".into(),
-            },
-            Bible {
-                book: "Psalms",
-                chapter: "83",
-                verse: "18",
-                booknum: "19".into(),
-            },
-        ];
-        let result: Vec<Bible> = Bible::parse(input);
+        };
+        let result: Bible = Bible::parse(input);
         assert_eq!(result, expect);
     }
 }
