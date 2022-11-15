@@ -18,7 +18,7 @@ pub trait Url {
     fn get_template(&self) -> String;
 
     /// Constructs the proper URL from `url_template`
-    fn get_url(&self, scripture: Bible) -> String {
+    fn get_url(&self, scripture: &Bible) -> String {
         let url: String = crate::url::BOOKNAME
             .replace(&self.get_template(), scripture.get_book())
             .into();
@@ -28,7 +28,7 @@ pub trait Url {
             .into();
 
         let url: String = crate::url::BOOKNUM
-            .replace(&url, format!("{:0<2}", "40"))
+            .replace(&url, format!("{:0<2}", scripture.get_i()))
             .into();
 
         let url: String = crate::url::CHAPTER
@@ -52,6 +52,7 @@ mod test {
 
     use super::*;
     use crate::locales::en_us::Site;
+    use pretty_assertions::assert_eq;
     #[test]
     fn test_url_template_jw_org() {
         let site: Site = Site::JwOrg;
@@ -61,12 +62,22 @@ mod test {
     }
 
     #[test]
-    fn test_get_url_jw_org_english() {
+    fn test_get_url_jw_org_matthew() {
         let scripture: Bible = Bible::single_scripture("matthew", "24", "14");
         let site: Site = Site::JwOrg;
-        let result: String = site.get_url(scripture);
+        let result: String = site.get_url(&scripture);
         let expected: String =
             "https://www.jw.org/en/library/bible/study-bible/books/matthew/24/#v40024014".into();
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_get_url_jw_org_john() {
+        let scripture: Bible = Bible::single_scripture("john", "3", "16");
+        let site: Site = Site::JwOrg;
+        let got: String = site.get_url(&scripture);
+        let expect: String =
+            "https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016".into();
+        assert_eq!(got, expect);
     }
 }

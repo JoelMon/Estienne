@@ -118,7 +118,7 @@ impl TryFrom<&str> for Book {
             "matthew" => Ok(Book::Matthew),
             "mark" => Ok(Book::Mark),
             "luke" => Ok(Book::Luke),
-            "john" => Ok(Book::John),
+            "john" | "joh" => Ok(Book::John),
             "acts" => Ok(Book::Acts),
             "romans" => Ok(Book::Romans),
             "1 corinthians" => Ok(Book::FirstCorinthians),
@@ -157,6 +157,7 @@ impl BibleRef for Book {
         }
     }
 
+    /// True if `&str` is a valid book of the Bible.
     fn is_valid(book: &str) -> bool {
         let v: Result<Book, String> = book.try_into();
 
@@ -207,6 +208,13 @@ mod test {
     fn test_matthew_index() {
         let expect: u8 = 40;
         let result: u8 = Book::get_index("Matthew").unwrap();
+        assert_eq!(result as u8, expect);
+    }
+
+    #[test]
+    fn test_john_abbr() {
+        let expect: u8 = 43;
+        let result: u8 = Book::get_index("joh").unwrap();
         assert_eq!(result as u8, expect);
     }
 

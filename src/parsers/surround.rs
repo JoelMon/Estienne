@@ -95,7 +95,6 @@ impl<'a> Script<'a> {
                 item.0,
                 self.elements.prefix.map_or("", |prefix_value| prefix_value),
             );
-
         }
 
         self
@@ -104,19 +103,16 @@ impl<'a> Script<'a> {
     pub(crate) fn url(mut self) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for item in self.slice.iter().rev() {
-
-            let verse = Bible::parse(vec!(self.get_from_slice(item).as_str()));
+            let verse = self.get_from_slice(item);
+            let foo = Bible::parse(verse.as_str());
+            // let verse = Bible::parse(thing.get_from_slice(item).as_str());
             let site = Site::JwOrg;
-            let url = site.get_url(todo!());
-
-            self.text.insert_str(
-                item.0 + (item.1 - item.0),
-                format!("]({})", "cool").as_str(),
-            );
+            let url = site.get_url(&foo);
 
             self.text
-                .insert_str(item.0, self.elements.prefix.map_or("", |v| v));
+                .insert_str(item.0 + (item.1 - item.0), format!("]({})", url).as_str());
 
+            self.text.insert_str(item.0, "[");
         }
 
         self
@@ -267,7 +263,7 @@ mod test {
     #[test]
     fn t_single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
-        let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
+        let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/John/3/#v43003016). It is quoted often.".to_string();
         let got: String = Script::new(text).url().get_text();
         assert_eq!(got, expect)
     }
@@ -280,7 +276,7 @@ mod test {
         let got: Vec<String> = Script::new(text).get_scripture();
         assert_eq!(got, expect)
     }
-    
+
     #[test]
     fn t_get_from_slice() {
         let text: &str =
