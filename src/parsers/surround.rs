@@ -82,6 +82,23 @@ impl<'a> Script<'a> {
         for item in self.slice.iter().rev() {
             self.text.insert_str(
                 item.0 + (item.1 - item.0),
+                self.elements.postfix.map_or("", |postfix_value| postfix_value),
+            );
+
+            self.text
+                .insert_str(item.0, self.elements.prefix.map_or("", |prefix_value| prefix_value));
+
+            dbg!(&self.text);
+        }
+
+        self
+    }
+    /// Returns the original string with URL markup for all scriptures.
+    pub(crate) fn url(mut self) -> Self {
+        // .rev method is used to avoid dealing with the changing size of the string.
+        for item in self.slice.iter().rev() {
+            self.text.insert_str(
+                item.0 + (item.1 - item.0),
                 self.elements.postfix.map_or("", |v| v),
             );
 
@@ -206,16 +223,16 @@ mod test {
         let text: &str =
             "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: &str = "Two popular scripture are [prefix]John 3:16 and [prefix]Matthew 24:14. They are quoted often.";
-        let result: String = Script::new(text).prefix("[prefix]").surround().get_text();
-        assert_eq!(result, expect)
+        let got: String = Script::new(text).prefix("[prefix]").surround().get_text();
+        assert_eq!(got, expect)
     }
 
     #[test]
     fn t_add_element_postfix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16[postfix], it's quoted often.";
-        let result: String = Script::new(text).postfix("[postfix]").surround().get_text();
-        assert_eq!(result, expect)
+        let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
+        assert_eq!(got, expect)
     }
 
     #[test]
@@ -223,8 +240,16 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Mathew 24:14. They are quoted often.";
         let expect: &str = "Two popular scriptures are John 3:16[postfix] and Mathew 24:14[postfix]. They are quoted often.";
-        let result: String = Script::new(text).postfix("[postfix]").surround().get_text();
-        assert_eq!(result, expect)
+        let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
+        assert_eq!(got, expect)
+    }
+    
+    #[test]
+    fn t_single_url() {
+        let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
+        let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
+        let got: String = Script::new(text).url().get_text();
+        assert_eq!(got, expect)
     }
 
     #[test]
@@ -232,7 +257,8 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
-        let result: Vec<String> = Script::new(text).get_scripture();
-        assert_eq!(result, expect)
+        let got: Vec<String> = Script::new(text).get_scripture();
+        assert_eq!(got, expect)
     }
+
 }
