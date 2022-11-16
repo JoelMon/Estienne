@@ -1,6 +1,5 @@
 use crate::{
-    locales::{self, en_us::Book, BibleRef},
-    Locale,
+    locales::{en_us::Book, BibleRef},
 };
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -68,6 +67,7 @@ impl<'a> Bible<'a> {
 
         Self {
             book: scripture.name("book").unwrap().as_str(),
+            //TODO Fix this part so LOCALES can work.
             booknum: Book::get_index(scripture.name("book").unwrap().as_str())
                 .unwrap()
                 .to_string(),

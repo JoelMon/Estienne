@@ -1,6 +1,4 @@
-use std::array::try_from_fn;
-
-use crate::{parsers::scripture::Bible, Locale, locales::en_us::Book};
+use crate::{parsers::scripture::Bible, locales::en_us::Book};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -23,10 +21,10 @@ pub trait Url {
     fn get_url(&self, scripture: &Bible) -> String {
 
         let book_name:Book= scripture.get_book().try_into().unwrap();
-        let book_name:&str= book_name.try_into().unwrap();
+        let book_name:&str= book_name.into();
 
         let url: String = crate::url::BOOKNAME
-            .replace(&self.get_template(), scripture.get_book())
+            .replace(&self.get_template(), book_name)
             .into();
 
         let url: String = crate::url::CHAPTER
