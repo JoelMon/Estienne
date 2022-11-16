@@ -55,6 +55,7 @@ static LOCALE: OnceCell<Locale> = OnceCell::new();
 pub enum Locale {
     /// American English
     en_us,
+    es_es,
 }
 
 #[allow(unused_must_use)]
@@ -68,7 +69,11 @@ impl Locale {
     /// Retrieves the value of `LOCALE`, may retrieve an arbitrary number of times.
     //TODO: Should be a result since it can panic
     pub fn get() -> &'static Locale {
-        LOCALE.get().expect("LOCALE was not initialized")
+    match    LOCALE.get().expect("LOCALE was not initialized"){
+        Locale::en_us => &Locale::en_us,
+        Locale::es_es => &Locale::es_es,
+    }
+
     }
 }
 
@@ -82,9 +87,9 @@ pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: 
 }
 
 /// Links scriptures found to a online Bible.
-pub fn url<S: Into<String> + Clone>(site: Site, text: S) -> String {
+pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> String {
     parsers::surround::Script::new(text)
-        .url(Locale::en_us, site)
+        .url(Locale::get(), site)
         .get_text()
 }
 
@@ -116,7 +121,17 @@ mod test {
     fn t_revelations_url() {
         let text: &str = "A popular scriptures is Rev 12:12. It is quoted often.";
         let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
-        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
+        Locale::new(Locale::en_us);
+        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_mateo_url() {
+        let text: &str = "A popular scriptures is Mateo 12:12. It is quoted often.";
+        let expect: String = "A popular scriptures is [Mateo 12:12](https://www.jw.org/en/library/bible/study-bible/books/mateo/12/#v40012012). It is quoted often.".to_string();
+        Locale::new(Locale::es_es);
+        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 

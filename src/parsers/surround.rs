@@ -105,7 +105,7 @@ impl<'a> Script<'a> {
     }
 
     /// Returns the original string with URL markup for all scriptures.
-    pub(crate) fn url(mut self, locale: Locale, site: Site) -> Self {
+    pub(crate) fn url(mut self, locale: &Locale, site: &Site) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for (start, end) in self.slice.iter().rev() {
             let verse_slice = self.get_from_slice(&(*start, *end));
@@ -152,6 +152,8 @@ impl<'a> Script<'a> {
 
 #[cfg(test)]
 mod test {
+    use crate::LOCALE;
+
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -266,7 +268,8 @@ mod test {
     fn t_single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
+        LOCALE.set(Locale::en_us);
+        let got: String = Script::new(text).url(LOCALE.get().unwrap(), &Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
@@ -274,7 +277,8 @@ mod test {
     fn t_single_url_abbr() {
         let text: &str = "A popular scriptures is Joh 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [Joh 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        let got: String = Script::new(text).url(Locale::en_us, Site::JwOrg).get_text();
+        LOCALE.set(Locale::en_us);
+        let got: String = Script::new(text).url(LOCALE.get().unwrap(), &Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
