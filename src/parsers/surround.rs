@@ -11,6 +11,7 @@ type Start = usize;
 type End = usize;
 
 // lazy_static insures that the regex is compiled only once.
+// Only works with left to right languages.
 lazy_static! {
     static ref RE: regex::Regex = Regex::new(r"(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)").expect("error while compiling the regex in surround");
 }
@@ -32,7 +33,7 @@ pub struct Script<'a> {
 
 #[allow(unused_variables)]
 impl<'a> Script<'a> {
-    // Find all scriptures in a line and return the beginning index and length.
+    /// Find all _potential_ scriptures in a line and return the beginning index and length.
     pub(crate) fn new<S>(text: S) -> Self
     where
         S: Into<String> + Clone,
@@ -60,11 +61,13 @@ impl<'a> Script<'a> {
         }
     }
 
+    /// The prefix to be added before the scripture.
     pub fn prefix(mut self, prefix: &'a str) -> Self {
         self.elements.prefix = Some(prefix);
         self
     }
 
+    /// The postfix to be added after the scripture.
     pub fn postfix(mut self, postfix: &'a str) -> Self {
         self.elements.postfix = Some(postfix);
         self
@@ -81,6 +84,7 @@ impl<'a> Script<'a> {
     }
 
     /// The surround method adds a prefix and postfix when the corresponding methods are used.
+    /// `surround()` does not verify if a captured _scripture_ is valid.
     pub(crate) fn surround(mut self) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for item in self.slice.iter().rev() {
@@ -99,18 +103,19 @@ impl<'a> Script<'a> {
 
         self
     }
+
     /// Returns the original string with URL markup for all scriptures.
     pub(crate) fn url(mut self, locale: Locale, site: Site) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
-        for item in self.slice.iter().rev() {
-            let verse_slice = self.get_from_slice(item);
+        for (start, end) in self.slice.iter().rev() {
+            let verse_slice = self.get_from_slice(&(*start, *end));
             let bible = Bible::parse(verse_slice.as_str());
             let url = site.get_url(&bible);
 
             self.text
-                .insert_str(item.0 + (item.1 - item.0), format!("]({})", url).as_str());
+                .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
 
-            self.text.insert(item.0, '[');
+            self.text.insert(*start, '[');
         }
 
         self
@@ -125,7 +130,6 @@ impl<'a> Script<'a> {
     pub(crate) fn get_from_slice(&self, slice: &(usize, usize)) -> String {
         let foo = self.clone();
         let text = foo.get_text();
-        
 
         text[slice.0..slice.1].to_owned()
     }
