@@ -33,7 +33,6 @@ mod locales;
 mod parsers;
 mod url;
 use locales::en_us::Site;
-use once_cell::{self, sync::OnceCell};
 
 /// The markup formats supported.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -46,40 +45,9 @@ pub enum Markup {
     HTML,
 }
 
-// Initialize a safe global variable.
-// Can be only set once but read many times.
-static LOCALE: OnceCell<Locale> = OnceCell::new();
-
-#[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Locale {
-    /// American English
-    en_us,
-    es_es,
-}
-
-#[allow(unused_must_use)]
-impl Locale {
-    /// Sets the value of `LOCALE`. Can only set once.
-    //TODO: Should be a result since it can panic if ran twice
-    pub fn new(locale: Locale) {
-        LOCALE.set(locale);
-    }
-
-    /// Retrieves the value of `LOCALE`, may retrieve an arbitrary number of times.
-    //TODO: Should be a result since it can panic
-    pub fn get() -> &'static Locale {
-    match    LOCALE.get().expect("LOCALE was not initialized"){
-        Locale::en_us => &Locale::en_us,
-        Locale::es_es => &Locale::es_es,
-    }
-
-    }
-}
-
 /// Adds the prefix and postfix around each scripture found in the `text`.
 pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: &'a str) -> String {
-    parsers::surround::Script::new(text)
+    parsers::surround::SurroundObject::new(text.into())
         .prefix(prefix)
         .postfix(postfix)
         .surround()
@@ -88,50 +56,58 @@ pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: 
 
 /// Links scriptures found to a online Bible.
 pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> String {
-    parsers::surround::Script::new(text)
-        .url(Locale::get(), site)
+    parsers::surround::SurroundObject::new(text.into())
+        .url(site)
         .get_text()
 }
 
 #[cfg(test)]
 mod test {
-    use crate::parsers::surround::Script;
+    use crate::parsers::surround::SurroundObject;
 
     use super::*;
+    use crate::locales::LocaleLang;
     use pretty_assertions::assert_eq;
 
-    #[test]
-    fn t_set_read_locales() {
-        let expect = &Locale::en_us;
-        Locale::new(Locale::en_us);
-        let got = Locale::get();
-        assert_eq!(got, expect);
+    // Setup en_us locale for testing.
+    fn setup_locale_en() {
+        match LocaleLang::set(LocaleLang::en_us) {
+            Ok(_) => (),
+            Err(_) => LocaleLang::swap(LocaleLang::en_us),
+        };
+    }
+
+    // Setup es_es locale for testing.
+    fn setup_locale_es() {
+        match LocaleLang::set(LocaleLang::es_es) {
+            Ok(_) => (),
+            Err(_) => LocaleLang::swap(LocaleLang::es_es),
+        };
     }
 
     #[test]
-    #[should_panic]
-    // Should panic because locale was not set.
-    fn t_read_locales_error() {
-        let expect = &Locale::en_us;
-        let got = Locale::get();
-        assert_eq!(got, expect);
+    fn t_set_read_locales() {
+        setup_locale_en();
+        let expect = LocaleLang::en_us;
+        let got = LocaleLang::get().unwrap();
+        assert_eq!(**got.load(), expect);
     }
 
     #[test]
     fn t_revelations_url() {
+        setup_locale_en();
         let text: &str = "A popular scriptures is Rev 12:12. It is quoted often.";
-        let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
-        Locale::new(Locale::en_us);
-        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
+        let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".into();
+        let got: String = SurroundObject::new(text).url(&Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
     #[test]
     fn t_mateo_url() {
+        setup_locale_es();
         let text: &str = "A popular scriptures is Mateo 12:12. It is quoted often.";
-        let expect: String = "A popular scriptures is [Mateo 12:12](https://www.jw.org/en/library/bible/study-bible/books/mateo/12/#v40012012). It is quoted often.".to_string();
-        Locale::new(Locale::es_es);
-        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
+        let expect: String = "A popular scriptures is [Mateo 12:12](https://www.jw.org/en/library/bible/study-bible/books/mateo/12/#v40012012). It is quoted often.".into();
+        let got: String = SurroundObject::new(text).url(&Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 

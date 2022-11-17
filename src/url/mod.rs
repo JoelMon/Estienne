@@ -1,4 +1,4 @@
-use crate::{parsers::scripture::Bible, locales::en_us::Book};
+use crate::parsers::scripture::Scripture;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -13,15 +13,14 @@ lazy_static! {
         Regex::new(r"\{VERSE\}").expect("error while compiling the regex in VERSE");
 }
 
+/// TODO: **NOTE** This has to be rethought
 pub trait Url {
     /// Returns the template to the URL.
     fn get_template(&self) -> String;
 
     /// Constructs the proper URL from `url_template`
-    fn get_url(&self, scripture: &Bible) -> String {
-
-        let book_name:Book= scripture.get_book().try_into().unwrap();
-        let book_name:&str= book_name.into();
+    fn get_url(&self, scripture: &Scripture) -> String {
+        let book_name: &str = scripture.get_book().try_into().expect("book was not found");
 
         let url: String = crate::url::BOOKNAME
             .replace(&self.get_template(), book_name)
@@ -55,8 +54,17 @@ pub trait Url {
 mod test {
 
     use super::*;
-    use crate::locales::en_us::Site;
+    use crate::locales::{en_us::Site, LocaleLang};
     use pretty_assertions::assert_eq;
+
+    // Setup locale for testing.
+    fn setup_locale() {
+        match LocaleLang::set(LocaleLang::en_us) {
+            Ok(_) => (),
+            Err(_) => LocaleLang::swap(LocaleLang::en_us),
+        };
+    }
+
     #[test]
     fn test_url_template_jw_org() {
         let site: Site = Site::JwOrg;
@@ -67,7 +75,7 @@ mod test {
 
     #[test]
     fn test_get_url_jw_org_matthew() {
-        let scripture: Bible = Bible::single_scripture("matthew", "24", "14");
+        let scripture: Scripture = Scripture::single_scripture("matthew", "24", "14");
         let site: Site = Site::JwOrg;
         let result: String = site.get_url(&scripture);
         let expected: String =
@@ -77,7 +85,7 @@ mod test {
 
     #[test]
     fn test_get_url_jw_org_john() {
-        let scripture: Bible = Bible::single_scripture("john", "3", "16");
+        let scripture: Scripture = Scripture::single_scripture("john", "3", "16");
         let site: Site = Site::JwOrg;
         let got: String = site.get_url(&scripture);
         let expect: String =
@@ -87,7 +95,7 @@ mod test {
 
     #[test]
     fn test_get_url_jw_org_john_abbr() {
-        let scripture: Bible = Bible::single_scripture("joh", "3", "16");
+        let scripture: Scripture = Scripture::single_scripture("joh", "3", "16");
         let site: Site = Site::JwOrg;
         let got: String = site.get_url(&scripture);
         let expect: String =

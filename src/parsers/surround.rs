@@ -2,9 +2,9 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::{Borrow, Cow};
 
-use crate::{locales::en_us::Site, url::Url, Locale};
+use crate::{locales::en_us::Site, url::Url};
 
-use super::scripture::Bible;
+use super::scripture::Scripture;
 
 type ScriptSlice = (Start, End);
 type Start = usize;
@@ -18,21 +18,29 @@ lazy_static! {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct Elements<'a> {
+    /// The text that will be placed _before_ the scripture.
     prefix: Option<&'a str>,
+    /// The length of the prefix text.
     prefix_len: Option<usize>,
+    /// The text that will be placed _after_ the scripture.
     postfix: Option<&'a str>,
+    /// The length of the postfix text.
     postfix_len: Option<usize>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Script<'a> {
+/// A scripture that will be use to surround with something.
+pub struct SurroundObject<'a> {
+    /// The `Elements` struct that contains the prefix and postfix, named elements, and information about each element.
     elements: Elements<'a>,
+    /// The index to find beginning and end of the scripture.
     slice: Vec<ScriptSlice>,
+    /// The text passed in which contains a scripture.
     text: String,
 }
 
 #[allow(unused_variables)]
-impl<'a> Script<'a> {
+impl<'a> SurroundObject<'a> {
     /// Find all _potential_ scriptures in a line and return the beginning index and length.
     pub(crate) fn new<S>(text: S) -> Self
     where
@@ -105,12 +113,12 @@ impl<'a> Script<'a> {
     }
 
     /// Returns the original string with URL markup for all scriptures.
-    pub(crate) fn url(mut self, locale: &Locale, site: &Site) -> Self {
+    pub(crate) fn url(mut self, site: &Site) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
         for (start, end) in self.slice.iter().rev() {
             let verse_slice = self.get_from_slice(&(*start, *end));
-            let bible = Bible::parse(verse_slice.as_str());
-            let url = site.get_url(&bible);
+            let bible: Option<Scripture> = Scripture::parse(verse_slice.as_str());
+            let url = site.get_url(&bible.expect(r#"should not be None"#));
 
             self.text
                 .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
@@ -152,16 +160,30 @@ impl<'a> Script<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::LOCALE;
+    use crate::locales::LocaleLang;
 
     use super::*;
+    // use crate::locales::LocaleEnum;
     use pretty_assertions::assert_eq;
 
+    fn setup_locale_en() {
+        match LocaleLang::set(LocaleLang::en_us) {
+            Ok(_) => (),
+            Err(_) => LocaleLang::swap(LocaleLang::en_us),
+        };
+    }
+
+    fn setup_locale_es() {
+        match LocaleLang::set(LocaleLang::es_es) {
+            Ok(_) => (),
+            Err(_) => LocaleLang::swap(LocaleLang::es_es),
+        };
+    }
     #[test]
     fn t_is_prefix() {
         let text: &str = "Testing";
-        let result_true: Script = Script::new(text).prefix("true");
-        let result_false: Script = Script::new(text); // Defaults to `None`.
+        let result_true: SurroundObject = SurroundObject::new(text).prefix("true");
+        let result_false: SurroundObject = SurroundObject::new(text); // Defaults to `None`.
 
         assert!(result_true.is_prefix());
         assert!(!result_false.is_prefix());
@@ -170,8 +192,8 @@ mod test {
     #[test]
     fn t_is_postfix() {
         let text: &str = "Testing";
-        let result_true: Script = Script::new(text).postfix("true");
-        let result_false: Script = Script::new(text); // Defaults to `None`.
+        let result_true: SurroundObject = SurroundObject::new(text).postfix("true");
+        let result_false: SurroundObject = SurroundObject::new(text); // Defaults to `None`.
 
         assert!(result_true.is_postfix());
         assert!(!result_false.is_postfix());
@@ -181,7 +203,7 @@ mod test {
     fn t_find_slice_1() {
         let text: &str = "A popular scripture is John 3:16.";
         let expect: Vec<(usize, usize)> = vec![(23, 32)];
-        let result: Script = Script::new(text);
+        let result: SurroundObject = SurroundObject::new(text);
         assert_eq!(result.slice, expect);
     }
 
@@ -189,14 +211,14 @@ mod test {
     fn t_find_slice_2() {
         let text: &str = "John 3:16 and Matthew 24:14";
         let expect: Vec<(usize, usize)> = vec![(0, 9), (14, 27)];
-        let result: Script = Script::new(text);
+        let result: SurroundObject = SurroundObject::new(text);
         assert_eq!(result.slice, expect);
     }
 
     #[test]
     fn t_find_slice_3() {
         let text: &str = "John 3:16, Mathew 24:14, and Psalms 83:18 are commonly used.";
-        let result: Script = Script::new(text);
+        let result: SurroundObject = SurroundObject::new(text);
         assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)]);
     }
 
@@ -204,7 +226,7 @@ mod test {
     fn t_single_scripture() {
         let text: &str = "John 3:16";
         let expect: &str = "[John 3:16]";
-        let got: String = Script::new(text)
+        let got: String = SurroundObject::new(text)
             .prefix("[")
             .postfix("]")
             .surround()
@@ -217,7 +239,7 @@ mod test {
     fn t_add_element_prefix_single_none() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let result: String = Script::new(text).surround().get_text();
+        let result: String = SurroundObject::new(text).surround().get_text();
         assert_eq!(result, expect)
     }
 
@@ -225,7 +247,7 @@ mod test {
     fn t_add_element_prefix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
-        let result: String = Script::new(text).prefix("[").surround().get_text();
+        let result: String = SurroundObject::new(text).prefix("[").surround().get_text();
         assert_eq!(result, expect);
     }
 
@@ -233,7 +255,7 @@ mod test {
     fn t_add_element_prefix_single_to_string() {
         let text: String = "Another popular scripture is John 3:16, it's quoted often.".to_string();
         let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
-        let result: String = Script::new(text).prefix("[").surround().get_text();
+        let result: String = SurroundObject::new(text).prefix("[").surround().get_text();
         assert_eq!(result, expect);
     }
 
@@ -243,7 +265,10 @@ mod test {
         let text: &str =
             "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: &str = "Two popular scripture are [prefix]John 3:16 and [prefix]Matthew 24:14. They are quoted often.";
-        let got: String = Script::new(text).prefix("[prefix]").surround().get_text();
+        let got: String = SurroundObject::new(text)
+            .prefix("[prefix]")
+            .surround()
+            .get_text();
         assert_eq!(got, expect)
     }
 
@@ -251,7 +276,10 @@ mod test {
     fn t_add_element_postfix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16[postfix], it's quoted often.";
-        let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
+        let got: String = SurroundObject::new(text)
+            .postfix("[postfix]")
+            .surround()
+            .get_text();
         assert_eq!(got, expect)
     }
 
@@ -260,25 +288,29 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Mathew 24:14. They are quoted often.";
         let expect: &str = "Two popular scriptures are John 3:16[postfix] and Mathew 24:14[postfix]. They are quoted often.";
-        let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
+        let got: String = SurroundObject::new(text)
+            .postfix("[postfix]")
+            .surround()
+            .get_text();
         assert_eq!(got, expect)
     }
 
     #[test]
     fn t_single_url() {
+        setup_locale_en();
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        LOCALE.set(Locale::en_us);
-        let got: String = Script::new(text).url(LOCALE.get().unwrap(), &Site::JwOrg).get_text();
+
+        let got: String = SurroundObject::new(text).url(&Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
     #[test]
     fn t_single_url_abbr() {
+        setup_locale_en();
         let text: &str = "A popular scriptures is Joh 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [Joh 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        LOCALE.set(Locale::en_us);
-        let got: String = Script::new(text).url(LOCALE.get().unwrap(), &Site::JwOrg).get_text();
+        let got: String = SurroundObject::new(text).url(&Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
@@ -287,7 +319,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
-        let got: Vec<String> = Script::new(text).get_scripture();
+        let got: Vec<String> = SurroundObject::new(text).get_scripture();
         assert_eq!(got, expect)
     }
 
@@ -296,7 +328,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect = "popular".to_string();
-        let got: String = Script::new(text).get_from_slice(&(4, 11));
+        let got: String = SurroundObject::new(text).get_from_slice(&(4, 11));
         assert_eq!(got, expect)
     }
 }
