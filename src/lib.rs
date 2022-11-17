@@ -36,6 +36,7 @@ use locales::en_us::Site;
 use once_cell::{self, sync::OnceCell};
 
 /// The markup formats supported.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Markup {
     /// Common markdown `(LINK TEXT)[URL]`
     Markdown,
@@ -50,20 +51,29 @@ pub enum Markup {
 static LOCALE: OnceCell<Locale> = OnceCell::new();
 
 #[allow(non_camel_case_types)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Locale {
     /// American English
     en_us,
+    es_es,
 }
 
 #[allow(unused_must_use)]
 impl Locale {
-    /// Retrieves the value of `LOCALE`, may retrieve an arbitrary number of times.
-    pub fn get() -> &'static Locale {
-        LOCALE.get().expect("LOCALE was not initialized")
-    }
     /// Sets the value of `LOCALE`. Can only set once.
+    //TODO: Should be a result since it can panic if ran twice
     pub fn new(locale: Locale) {
         LOCALE.set(locale);
+    }
+
+    /// Retrieves the value of `LOCALE`, may retrieve an arbitrary number of times.
+    //TODO: Should be a result since it can panic
+    pub fn get() -> &'static Locale {
+    match    LOCALE.get().expect("LOCALE was not initialized"){
+        Locale::en_us => &Locale::en_us,
+        Locale::es_es => &Locale::es_es,
+    }
+
     }
 }
 
@@ -77,44 +87,84 @@ pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: 
 }
 
 /// Links scriptures found to a online Bible.
-pub fn url<S: Into<String> + Clone>(locales: Locale, site: Site, markup: Markup, text: S) -> String {
-    todo!()
+pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> String {
+    parsers::surround::Script::new(text)
+        .url(Locale::get(), site)
+        .get_text()
 }
 
 #[cfg(test)]
 mod test {
+    use crate::parsers::surround::Script;
+
     use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn t_set_read_locales() {
+        let expect = &Locale::en_us;
+        Locale::new(Locale::en_us);
+        let got = Locale::get();
+        assert_eq!(got, expect);
+    }
+
+    #[test]
+    #[should_panic]
+    // Should panic because locale was not set.
+    fn t_read_locales_error() {
+        let expect = &Locale::en_us;
+        let got = Locale::get();
+        assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn t_revelations_url() {
+        let text: &str = "A popular scriptures is Rev 12:12. It is quoted often.";
+        let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
+        Locale::new(Locale::en_us);
+        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_mateo_url() {
+        let text: &str = "A popular scriptures is Mateo 12:12. It is quoted often.";
+        let expect: String = "A popular scriptures is [Mateo 12:12](https://www.jw.org/en/library/bible/study-bible/books/mateo/12/#v40012012). It is quoted often.".to_string();
+        Locale::new(Locale::es_es);
+        let got: String = Script::new(text).url(Locale::get(), &Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
 
     #[test]
     fn t_add_element_prefix_single() {
         let input: &str = "Another popular scripture is John 3:16, it's quoted often.";
-        let expected: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
-        let result = surround(input, "**", "]]");
-        assert_eq!(result, expected);
+        let expect: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
+        let got = surround(input, "**", "]]");
+        assert_eq!(got, expect);
     }
 
     #[test]
     // Test if a String can be passed in as input.
     fn t_add_element_prefix_single_to_string() {
         let input: String = "Another popular scripture is John 3:16, it's quoted often.".into();
-        let expected: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
-        let result = surround(input, "**", "]]");
-        assert_eq!(result, expected);
+        let expect: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
+        let got = surround(input, "**", "]]");
+        assert_eq!(got, expect);
     }
 
     #[test]
     fn t_add_element_prefix_multi() {
         let input:&str = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.";
-        let expected:&str = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.";
-        let result = surround(input, "**", "]]");
-        assert_eq!(result, expected);
+        let expect:&str = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.";
+        let got = surround(input, "**", "]]");
+        assert_eq!(got, expect);
     }
 
     #[test]
     fn t_add_element_prefix_multi_no_scriptures() {
-        let input: &str = "There are not scriptures in this line.";
-        let expected: &str = "There are not scriptures in this line.";
-        let result = surround(input, "**", "]]");
-        assert_eq!(result, expected);
+        let input: &str = "There are no scriptures in this line.";
+        let expect: &str = "There are no scriptures in this line.";
+        let got = surround(input, "**", "]]");
+        assert_eq!(got, expect);
     }
 }

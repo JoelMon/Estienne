@@ -115,7 +115,7 @@ impl TryFrom<&str> for Book {
             "haggai" => Ok(Book::Haggai),
             "zechariah" => Ok(Book::Zechariah),
             "malachi" => Ok(Book::Malachi),
-            "matthew" => Ok(Book::Matthew),
+            "mateo" => Ok(Book::Matthew),
             "mark" => Ok(Book::Mark),
             "luke" => Ok(Book::Luke),
             "john" | "joh" => Ok(Book::John),
@@ -189,7 +189,7 @@ impl From<Book> for &str {
             Book::Haggai => "haggai",
             Book::Zechariah => "zechariah",
             Book::Malachi => "malachi",
-            Book::Matthew => "matthew",
+            Book::Matthew => "mateo",
             Book::Mark => "mark",
             Book::Luke => "luke",
             Book::John => "john",
@@ -279,7 +279,7 @@ mod test {
     #[test]
     fn test_matthew_index() {
         let expect: u8 = 40;
-        let result: u8 = Book::get_index("Matthew").unwrap();
+        let result: u8 = Book::get_index("mateo").unwrap();
         assert_eq!(result as u8, expect);
     }
 
