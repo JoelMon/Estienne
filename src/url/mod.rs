@@ -19,7 +19,9 @@ pub trait Url {
     fn get_template(&self) -> String;
 
     /// Constructs the proper URL from `url_template`
-    fn get_url(&self, scripture: &Scripture) -> String {
+    /// ## Warning
+    /// This function will be deprecated.
+    fn url_builder(&self, scripture: &Scripture) -> String {
         let book_name: &str = scripture.get_book().try_into().expect("book was not found");
 
         let url: String = crate::url::BOOKNAME
@@ -31,7 +33,7 @@ pub trait Url {
             .into();
 
         let url: String = crate::url::BOOKNUM
-            .replace(&url, format!("{:0<2}", scripture.get_i()))
+            .replace(&url, format!("{:0<2}", scripture.get_index()))
             .into();
 
         let url: String = crate::url::CHAPTER
@@ -77,7 +79,7 @@ mod test {
     fn test_get_url_jw_org_matthew() {
         let scripture: Scripture = Scripture::single_scripture("matthew", "24", "14");
         let site: Site = Site::JwOrg;
-        let result: String = site.get_url(&scripture);
+        let result: String = site.url_builder(&scripture);
         let expected: String =
             "https://www.jw.org/en/library/bible/study-bible/books/matthew/24/#v40024014".into();
         assert_eq!(result, expected);
@@ -87,7 +89,7 @@ mod test {
     fn test_get_url_jw_org_john() {
         let scripture: Scripture = Scripture::single_scripture("john", "3", "16");
         let site: Site = Site::JwOrg;
-        let got: String = site.get_url(&scripture);
+        let got: String = site.url_builder(&scripture);
         let expect: String =
             "https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016".into();
         assert_eq!(got, expect);
@@ -97,7 +99,7 @@ mod test {
     fn test_get_url_jw_org_john_abbr() {
         let scripture: Scripture = Scripture::single_scripture("joh", "3", "16");
         let site: Site = Site::JwOrg;
-        let got: String = site.get_url(&scripture);
+        let got: String = site.url_builder(&scripture);
         let expect: String =
             "https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016".into();
         assert_eq!(got, expect);

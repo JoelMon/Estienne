@@ -214,7 +214,7 @@ mod test {
     use crate::locales::LocaleLang;
 
     // Setup locale for testing.
-    fn setup_locale(){
+    fn setup_locale_en_us(){
         match LocaleLang::set(LocaleLang::en_us){
             Ok(_) => (),
             Err(_) => LocaleLang::swap(LocaleLang::en_us),
@@ -223,7 +223,7 @@ mod test {
 
     #[test]
     fn test_genesis_enum() {
-        setup_locale();
+        setup_locale_en_us();
         let expect = 1;
         let got = Book::get_index("genesis").unwrap();
         assert_eq!(got, expect);
@@ -231,7 +231,7 @@ mod test {
 
     #[test]
     fn test_genesis_abbr_enum() {
-        setup_locale();
+        setup_locale_en_us();
         let expect = 1;
         let got = Book::get_index("ge").unwrap();
         assert_eq!(got, expect);
@@ -239,15 +239,23 @@ mod test {
 
     #[test]
     fn test_matthew_index() {
-        setup_locale();
+        setup_locale_en_us();
         let expect: u8 = 40;
         let result: u8 = Book::get_index("Matthew").unwrap();
         assert_eq!(result as u8, expect);
     }
 
     #[test]
+    fn test_john() {
+        setup_locale_en_us();
+        let expect: u8 = 43;
+        let result: u8 = Book::get_index("john").unwrap();
+        assert_eq!(result as u8, expect);
+    }
+
+    #[test]
     fn test_john_abbr() {
-        setup_locale();
+        setup_locale_en_us();
         let expect: u8 = 43;
         let result: u8 = Book::get_index("joh").unwrap();
         assert_eq!(result as u8, expect);

@@ -34,23 +34,28 @@ impl<'a> Scripture<'a> {
         }
     }
 
+    /// Returns the book stored within the `Scripture` struct.
     pub(crate) fn get_book(&self) -> &'a str {
         self.book
     }
 
+    /// Checks to see if the book name stored within the `Scripture` struct is valid.
     pub(crate) fn valid_book(&self) -> bool {
         Book::is_valid(self.book)
     }
 
+    /// Returns the chapter number stored within the `Scripture` struct.
     pub(crate) fn get_chapter(&self) -> &'a str {
         self.chapter
     }
 
+    /// Returns the verse number stored within the `Scripture` struct.
     pub(crate) fn get_verse(&self) -> &'a str {
         self.verse
     }
 
-    pub(crate) fn get_i(&self) -> u8 {
+    /// Returns the index number of the book stored within the `Scripture` struct.
+    pub(crate) fn get_index(&self) -> u8 {
         Book::get_index(self.book).expect("expected a valid book")
     }
 
@@ -58,6 +63,8 @@ impl<'a> Scripture<'a> {
     pub(crate) fn parse(found_script: &'a str) -> Option<Scripture> {
         let re: &RE = &RE;
 
+        // Determine if scripture pattern found has a valid Bible name listed in `locales/`.
+        // `Book::is_valid()` takes care to determine which locales language needs to be checked.
         let scripture: Option<regex::Captures> = match Book::is_valid(
             re.captures(found_script)
                 .unwrap()
@@ -66,10 +73,10 @@ impl<'a> Scripture<'a> {
                 .as_str(),
         ) {
             true => Some(re.captures(found_script).unwrap()),
-
             false => None,
         };
 
+        // If a valid Bible name is stored in `scripture` then create a `Scripture` struct and return it to the caller.
         match scripture.is_some() {
             true => {
                 let scripture: regex::Captures = scripture.unwrap();

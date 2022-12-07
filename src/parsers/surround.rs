@@ -118,7 +118,7 @@ impl<'a> SurroundObject<'a> {
         for (start, end) in self.slice.iter().rev() {
             let verse_slice = self.get_from_slice(&(*start, *end));
             let bible: Option<Scripture> = Scripture::parse(verse_slice.as_str());
-            let url = site.get_url(&bible.expect(r#"should not be None"#));
+            let url = site.url_builder(&bible.expect(r#"should not be None"#));
 
             self.text
                 .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
@@ -134,7 +134,7 @@ impl<'a> SurroundObject<'a> {
         self.text
     }
 
-    // Returns a `String` to avoid borrowing headaches
+    /// Returns a `String` to avoid borrowing headaches
     pub(crate) fn get_from_slice(&self, slice: &(usize, usize)) -> String {
         let foo = self.clone();
         let text = foo.get_text();
