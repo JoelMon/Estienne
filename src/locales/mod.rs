@@ -61,6 +61,7 @@ trait Bible {
     fn get_index(book: &str) -> Result<u8, BibleError>;
     fn is_valid(book: &str) -> bool;
     fn str_to_BookMap(book: &str) -> Option<&Book>;
+    fn normalize_name(book:&str) -> &str;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
