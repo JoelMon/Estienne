@@ -172,18 +172,17 @@ impl<'a> Book {
         }
     }
 
-        fn find_str_from_enum(book_enum: &Book, hash: HashMap<&str, Book>) -> &'a str {
-            hash.iter()
-                .find_map(|(key, val)| {
-                    if book_enum == val {
-                        Some(*key)
-                    } else {
-                        panic!("The book_enum was not found in BOOKMAP.")
-                    }
-                })
-                .unwrap()
-        }
-    
+    fn find_str_from_enum(book_enum: &Book, hash: HashMap<&'a str, Book>) -> &'a str {
+        hash.iter()
+            .find_map(|(key, val)| {
+                if book_enum == val {
+                    Some(*key)
+                } else {
+                    panic!("The book_enum was not found in BOOKMAP.")
+                }
+            })
+            .unwrap()
+    }
 }
 
 // ########################################################################################################################
