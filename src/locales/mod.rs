@@ -3,7 +3,7 @@ pub mod es_es;
 
 use arc_swap::{ArcSwap, ArcSwapAny};
 use once_cell::sync::OnceCell;
-use std::{sync::Arc, collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 use thiserror::Error;
 
 use crate::locales;
@@ -134,7 +134,7 @@ pub enum Book {
     Revelation,
 }
 
-impl Book {
+impl<'a> Book {
     /// Returns whether `book` is a valid _book_ in the Bible for the a language determined by `LocaleLang`.
     pub(crate) fn is_valid(book: impl Into<String>) -> bool {
         let book: String = book.into().to_lowercase();
@@ -161,18 +161,19 @@ impl Book {
     /// For example, `ge` will return `genesis`, `Joel` will return `joel`, and `1john` will return `1 john`.
     ///
     /// TODO: Look into if receiving `1 john` is a problem or if it should be `1_john` for URL link creation.
-    pub(crate) fn normalize_name<'a>(book: &str) -> &'a str {
+    pub(crate) fn normalize_name(book: &str) -> &str {
         let book: String = book.to_lowercase();
         let book: &str = book.as_str();
-        let loc = LocaleLang::get().expect("LOCALE needs to be initialized");
+        let loc: &ArcSwapAny<Arc<LocaleLang>> =
+            LocaleLang::get().expect("LOCALE needs to be initialized");
         match **loc.load() {
             LocaleLang::en_us => locales::en_us::en_us::normalize_name(book),
             LocaleLang::es_es => locales::es_es::es_es::normalize_name(book),
         }
+    }
 
-        fn find_str_from_enum<'a>(book_enum: &Book, hash: HashMap<&str, Book>) -> &'a str {
-            hash
-                .iter()
+        fn find_str_from_enum(book_enum: &Book, hash: HashMap<&str, Book>) -> &'a str {
+            hash.iter()
                 .find_map(|(key, val)| {
                     if book_enum == val {
                         Some(*key)
@@ -182,7 +183,7 @@ impl Book {
                 })
                 .unwrap()
         }
-    }
+    
 }
 
 // ########################################################################################################################
@@ -244,6 +245,6 @@ mod test {
         let expect = "james";
         let got = Book::normalize_name(book);
 
-        assert_eq!(got.as_str(), expect);
+        assert_eq!(got, expect);
     }
 }

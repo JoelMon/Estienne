@@ -195,8 +195,7 @@ impl Bible for en_us {
             None => ALTMAP.get(book).unwrap(),
         };
 
-
-        todo!()
+        "cool"
     }
 }
 
