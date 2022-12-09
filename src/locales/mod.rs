@@ -3,7 +3,7 @@ pub mod es_es;
 
 use arc_swap::{ArcSwap, ArcSwapAny};
 use once_cell::sync::OnceCell;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, hash::Hash, sync::Arc};
 use thiserror::Error;
 
 use crate::locales;
@@ -62,6 +62,33 @@ trait Bible {
     fn is_valid(book: &str) -> bool;
     fn str_to_BookMap(book: &str) -> Option<&Book>;
     fn normalize_name(book: &str) -> &str;
+    fn find_str_from_enum<'a>(
+        book: &Book,
+        bookmap: HashMap<&'a str, Book>,
+        altmap: HashMap<&'a str, Book>,
+    ) -> &'a str {
+        // Find the `Book` enum belonging to the `str` entered. Expect the `str` to be valid.
+        let book_name = bookmap
+            .iter()
+            .find_map(|(book_str, book_enum)| {
+                if book == book_enum {
+                    Some(book_str)
+                } else {
+                    altmap.iter().find_map(
+                        |(book_name, book_enum)| {
+                            if book == book_enum {
+                                Some(book_str)
+                            } else {
+                                panic!("did not find the book name within the `BOOKMAP` or `ALTMAP` hashmaps, make sure the book name is validated before using this fuction")
+                            }
+                        },
+                    )
+                }
+            })
+            .unwrap();
+
+        book_name
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -134,7 +161,7 @@ pub enum Book {
     Revelation,
 }
 
-impl<'a> Book {
+impl Book {
     /// Returns whether `book` is a valid _book_ in the Bible for the a language determined by `LocaleLang`.
     pub(crate) fn is_valid(book: impl Into<String>) -> bool {
         let book: String = book.into().to_lowercase();
@@ -161,27 +188,16 @@ impl<'a> Book {
     /// For example, `ge` will return `genesis`, `Joel` will return `joel`, and `1john` will return `1 john`.
     ///
     /// TODO: Look into if receiving `1 john` is a problem or if it should be `1_john` for URL link creation.
-    pub(crate) fn normalize_name(book: &str) -> &str {
+    pub(crate) fn normalize_name(book: &str) -> String {
         let book: String = book.to_lowercase();
         let book: &str = book.as_str();
         let loc: &ArcSwapAny<Arc<LocaleLang>> =
             LocaleLang::get().expect("LOCALE needs to be initialized");
-        match **loc.load() {
-            LocaleLang::en_us => locales::en_us::en_us::normalize_name(book),
-            LocaleLang::es_es => locales::es_es::es_es::normalize_name(book),
-        }
-    }
 
-    fn find_str_from_enum(book_enum: &Book, hash: HashMap<&'a str, Book>) -> &'a str {
-        hash.iter()
-            .find_map(|(key, val)| {
-                if book_enum == val {
-                    Some(*key)
-                } else {
-                    panic!("The book_enum was not found in BOOKMAP.")
-                }
-            })
-            .unwrap()
+        match **loc.load() {
+            LocaleLang::en_us => locales::en_us::en_us::normalize_name(book).to_string(),
+            LocaleLang::es_es => locales::es_es::es_es::normalize_name(book).to_string(),
+        }
     }
 }
 
@@ -192,6 +208,7 @@ impl<'a> Book {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     // Setup `en_us` locale for testing.
     fn setup_locale_en() {

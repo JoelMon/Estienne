@@ -190,13 +190,44 @@ impl Bible for en_us {
     }
 
     fn normalize_name(book: &str) -> &str {
-        let book_enum: &Book = match BOOKMAP.get(book) {
+        let book: &Book = match BOOKMAP.get(book) {
             Some(v) => v,
             None => ALTMAP.get(book).unwrap(),
         };
-
-        "cool"
+        
+        Self::find_str_from_enum(book, BOOKMAP, ALTMAP)
+        
     }
+
+    fn find_str_from_enum<'a>(
+        book: &Book,
+        bookmap: HashMap<&'a str, Book>,
+        altmap: HashMap<&'a str, Book>,
+    ) -> &'a str {
+        // Find the `Book` enum belonging to the `str` entered. Expect the `str` to be valid.
+        let book_name = bookmap
+            .iter()
+            .find_map(|(book_str, book_enum)| {
+                if book == book_enum {
+                    Some(book_str)
+                } else {
+                    altmap.iter().find_map(
+                        |(book_name, book_enum)| {
+                            if book == book_enum {
+                                Some(book_str)
+                            } else {
+                                panic!("did not find the book name within the `BOOKMAP` or `ALTMAP` hashmaps, make sure the book name is validated before using this fuction")
+                            }
+                        },
+                    )
+                }
+            })
+            .unwrap();
+
+        book_name
+    }
+
+
 }
 
 /// All websites supported for the en_us language.
