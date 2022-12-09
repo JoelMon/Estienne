@@ -189,6 +189,10 @@ impl Bible for es_es {
     fn str_to_BookMap(book: &str) -> Option<&Book> {
         BOOKMAP.get(book)
     }
+
+    fn normalize_name(book: &str) -> &str {
+        todo!()
+    }
 }
 
 /// All websites supported for the en_us language.

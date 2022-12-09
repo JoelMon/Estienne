@@ -3,7 +3,7 @@ pub mod es_es;
 
 use arc_swap::{ArcSwap, ArcSwapAny};
 use once_cell::sync::OnceCell;
-use std::sync::Arc;
+use std::{sync::Arc, collections::HashMap};
 use thiserror::Error;
 
 use crate::locales;
@@ -61,7 +61,7 @@ trait Bible {
     fn get_index(book: &str) -> Result<u8, BibleError>;
     fn is_valid(book: &str) -> bool;
     fn str_to_BookMap(book: &str) -> Option<&Book>;
-    fn normalize_name(book:&str) -> &str;
+    fn normalize_name(book: &str) -> &str;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -149,11 +149,38 @@ impl Book {
     /// Returns the index for a valid book in the Bible. For example, Genesis would return an index of `"1"` since it is the first book of the Bible.
     pub(crate) fn get_index(book: impl Into<String>) -> Result<u8, BibleError> {
         let book: String = book.into().to_lowercase();
-        let book = book.as_str();
+        let book: &str = book.as_str();
         let loc = LocaleLang::get().expect("LOCALE needs to be initialized");
         match **loc.load() {
             LocaleLang::en_us => locales::en_us::en_us::get_index(book),
             LocaleLang::es_es => locales::es_es::es_es::get_index(book),
+        }
+    }
+
+    /// Takes a book and returns the book name normalized.
+    /// For example, `ge` will return `genesis`, `Joel` will return `joel`, and `1john` will return `1 john`.
+    ///
+    /// TODO: Look into if receiving `1 john` is a problem or if it should be `1_john` for URL link creation.
+    pub(crate) fn normalize_name<'a>(book: &str) -> &'a str {
+        let book: String = book.to_lowercase();
+        let book: &str = book.as_str();
+        let loc = LocaleLang::get().expect("LOCALE needs to be initialized");
+        match **loc.load() {
+            LocaleLang::en_us => locales::en_us::en_us::normalize_name(book),
+            LocaleLang::es_es => locales::es_es::es_es::normalize_name(book),
+        }
+
+        fn find_str_from_enum<'a>(book_enum: &Book, hash: HashMap<&str, Book>) -> &'a str {
+            hash
+                .iter()
+                .find_map(|(key, val)| {
+                    if book_enum == val {
+                        Some(*key)
+                    } else {
+                        panic!("The book_enum was not found in BOOKMAP.")
+                    }
+                })
+                .unwrap()
         }
     }
 }
@@ -208,5 +235,15 @@ mod test {
         setup_locale_es();
         let got: bool = Book::is_valid("Maria");
         assert!(!got);
+    }
+
+    #[test]
+    fn t_normalize_name_jas() {
+        setup_locale_en();
+        let book = "jas";
+        let expect = "james";
+        let got = Book::normalize_name(book);
+
+        assert_eq!(got.as_str(), expect);
     }
 }

@@ -188,6 +188,16 @@ impl Bible for en_us {
     fn str_to_BookMap(book: &str) -> Option<&Book> {
         BOOKMAP.get(book)
     }
+
+    fn normalize_name(book: &str) -> &str {
+        let book_enum: &Book = match BOOKMAP.get(book) {
+            Some(v) => v,
+            None => ALTMAP.get(book).unwrap(),
+        };
+
+
+        todo!()
+    }
 }
 
 /// All websites supported for the en_us language.
@@ -214,8 +224,8 @@ mod test {
     use crate::locales::LocaleLang;
 
     // Setup locale for testing.
-    fn setup_locale_en_us(){
-        match LocaleLang::set(LocaleLang::en_us){
+    fn setup_locale_en_us() {
+        match LocaleLang::set(LocaleLang::en_us) {
             Ok(_) => (),
             Err(_) => LocaleLang::swap(LocaleLang::en_us),
         };
