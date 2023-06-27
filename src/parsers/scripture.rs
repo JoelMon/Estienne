@@ -1,8 +1,8 @@
-use crate::{
-    locales::{en_us::Book, BibleRef},
-};
 use lazy_static::lazy_static;
 use regex::Regex;
+
+use crate::locales::book;
+
 
 lazy_static! {
     static ref RE: regex::Regex =
@@ -43,14 +43,18 @@ impl<'a> Bible<'a> {
         self.verse
     }
 
-    pub(crate) fn get_i(&self) -> u8 {
-        Book::get_index(self.book).expect("expected a valid book")
-    }
+    // pub(crate) fn get_i(&self) -> u8 {
+    //     let book2 = locales::book();
+    //     book2::get_index(self.book).expect("expected a valid book")
+    // }
 
     pub(crate) fn parse(scripture: &'a str) -> Bible {
         let re: &RE = &RE;
+        let l_book = book();
 
-        let scripture = match Book::is_valid(
+
+
+        let scripture = match l_book::is_valid(
             re.captures(scripture)
                 .unwrap()
                 .name("book")
@@ -61,7 +65,7 @@ impl<'a> Bible<'a> {
 
             false => {
                 //TODO: Improve this with Errors
-                panic!();
+                panic!()
             }
         };
 
