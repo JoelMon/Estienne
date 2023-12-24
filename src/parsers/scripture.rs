@@ -1,6 +1,4 @@
-use crate::{
-    locales::{en_us::Book, BibleRef},
-};
+use crate::locales::{en_us::Book, BibleRef};
 use lazy_static::lazy_static;
 use regex::Regex;
 
