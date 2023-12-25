@@ -17,7 +17,6 @@ lazy_static! {
         Regex::new(r"(?P<book>([123]?[ ]?[a-zA-Z]+))[ ](?P<chapter>\d+):(?P<start_verse>\d+)(?:-(?P<end_verse>\d+))?").expect("error while compiling regex");
 }
 
-
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct Elements<'a> {
     prefix: Option<&'a str>,
@@ -98,7 +97,7 @@ impl<'a> Script<'a> {
             );
 
             self.text.insert_str(
-                item.0,
+                item.0 + 0,
                 self.elements.prefix.map_or("", |prefix_value| prefix_value),
             );
         }
@@ -188,7 +187,7 @@ mod test {
     #[test]
     fn t_find_slice_1() {
         let text: &str = "A popular scripture is John 3:16.";
-        let expect: Vec<(usize, usize)> = vec![(23, 32)];
+        let expect: Vec<(Start, End)> = vec![(23, 32)];
         let result: Script = Script::new(text);
         assert_eq!(result.slice, expect);
     }
@@ -196,7 +195,7 @@ mod test {
     #[test]
     fn t_find_slice_2() {
         let text: &str = "John 3:16 and Matthew 24:14";
-        let expect: Vec<(usize, usize)> = vec![(0, 9), (14, 27)];
+        let expect: Vec<(Start, End)> = vec![(0, 9), (14, 27)];
         let result: Script = Script::new(text);
         assert_eq!(result.slice, expect);
     }

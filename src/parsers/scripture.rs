@@ -58,7 +58,7 @@ impl<'a> Bible<'a> {
             true => re.captures(scripture).unwrap(),
 
             false => {
-                //TODO: Improve this with Errors
+                //TODO: Improve this with proper errors.
                 panic!();
             }
         };
