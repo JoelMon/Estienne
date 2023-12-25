@@ -13,8 +13,10 @@ type End = usize;
 // lazy_static insures that the regex is compiled only once.
 // Only works with left to right languages.
 lazy_static! {
-    static ref RE: regex::Regex = Regex::new(r"(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)").expect("error while compiling the regex in surround");
+    static ref RE: regex::Regex =
+        Regex::new(r"(?P<book>([123]?[ ]?[a-zA-Z]+))[ ](?P<chapter>\d+):(?P<start_verse>\d+)(?:-(?P<end_verse>\d+))?").expect("error while compiling regex");
 }
+
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct Elements<'a> {
@@ -135,16 +137,27 @@ impl<'a> Script<'a> {
     }
 
     /// Returns a list of scriptures.
-    pub(crate) fn get_scripture(self) -> Vec<String> {
-        let mut scripture_list: Vec<String> = Vec::new();
-
-        for i in self.slice.iter() {
-            scripture_list.push(self.text.get(i.0..i.1).unwrap().to_string());
-        }
-
-        scripture_list
+    /// If the scripture is part of a range, i.e. 1 Timothy 3:1-7, then the range is returned as well.
+    pub fn get_scripture(&self) -> Vec<String> {
+        RE.captures_iter(&self.text)
+            .map(|cap| {
+                let book = cap.name("book").unwrap().as_str();
+                let chapter = cap.name("chapter").unwrap().as_str();
+                let verse = cap.name("verse").unwrap().as_str();
+                let end_verse = cap.name("end_verse").map_or("", |m| m.as_str());
+                
+                if end_verse.is_empty() {
+                    format!("{} {}:{}", book, chapter, verse)
+                } else {
+                    format!("{} {}:{}-{}", book, chapter, verse, end_verse)
+                }
+            })
+            .collect()
     }
+
+    // ...
 }
+
 
 // Unit tests
 #[cfg(test)]
@@ -290,6 +303,14 @@ mod test {
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect = "popular".to_string();
         let got: String = Script::new(text).get_from_slice(&(4, 11));
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_multiple_verses(){
+        let text: &str = "These scriptures are reviews often 1 Timothy 3:1-7.";
+        let expect: Vec<&str> = vec!["1 Timothy 3:1-7"];
+        let got: Vec<String> = Script::new(text).get_scripture();
         assert_eq!(got, expect)
     }
 }
