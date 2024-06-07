@@ -13,6 +13,7 @@ type End = usize;
 // lazy_static insures that the regex is compiled only once.
 // Only works with left to right languages.
 lazy_static! {
+    // Matches on scriptures.
     static ref RE: regex::Regex = Regex::new(r"(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)").expect("error while compiling the regex in surround");
 }
 
