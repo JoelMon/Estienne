@@ -4,9 +4,8 @@ use regex::Regex;
 
 lazy_static! {
     static ref RE: regex::Regex =
-        // Regular expression matches the pattern for the name of the book or letter, chapter, and verse. Single verse at the moment,
-        // ranges are not taken into account.
-        Regex::new(r"(?P<book>([1234]\s)?[a-zA-Z]+)(?:\s+)(?P<chapter>\d+)(:)(?P<verse>\d+)").expect("error while compiling the FIND_BOOK regex in scripture");
+        // Regular expression matches the pattern for the name of the book or letter, chapter, and verse.
+                Regex::new(r"(?<book>(?:[1234]\s?)?[a-zA-Z]+)\s*(?<chapter>\d+)(?::(?<verse>\d+(?:[—–-]\d+)?(?:,\s*\d+(?:[—–-]\d+)?)*(?:;\s*\d+(?::\d+(?:[—–-]\d+)?(?:,\s*\d+(?:[—–-]\d+)?)*))*)?)").expect("error while compiling the FIND_BOOK regex in scripture");
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -28,7 +27,7 @@ impl<'a> Bible<'a> {
             booknum: Default::default(),
         }
     }
-    //FIX
+
     pub(crate) fn get_book(&self) -> &'a str {
         self.book
     }
@@ -41,21 +40,28 @@ impl<'a> Bible<'a> {
         self.verse
     }
 
-    pub(crate) fn get_i(&self) -> u8 {
+    pub(crate) fn get_idx(&self) -> u8 {
         Book::get_index(self.book).expect("expected a valid book")
+    }
+
+    pub(crate) fn is_range(&self) -> bool {
+        match self.get_verse().contains('-') {
+            true => true,
+            false => false,
+        }
     }
 
     pub(crate) fn parse(scripture: &'a str) -> Bible {
         let re: &RE = &RE;
 
-        let scripture = match Book::is_valid(
-            re.captures(scripture)
+        let scripture: regex::Captures = match Book::is_valid(
+            RE.captures(scripture)
                 .unwrap()
                 .name("book")
                 .unwrap()
                 .as_str(),
         ) {
-            true => re.captures(scripture).unwrap(),
+            true => RE.captures(scripture).unwrap(),
 
             false => {
                 //TODO: Improve this with Errors
@@ -75,11 +81,11 @@ impl<'a> Bible<'a> {
     }
 }
 
-
 // Unit tests
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     #[should_panic]
@@ -116,6 +122,19 @@ mod test {
             book: "1 Timothy",
             chapter: "3",
             verse: "16",
+            booknum: "54".into(),
+        };
+        let result: Bible = Bible::parse(input);
+        assert_eq!(result, expect);
+    }
+
+    #[test]
+    fn t_find_book_ranged() {
+        let input: &str = "1 Timothy 3:16-20";
+        let expect: Bible = Bible {
+            book: "1 Timothy",
+            chapter: "3",
+            verse: "16-20",
             booknum: "54".into(),
         };
         let result: Bible = Bible::parse(input);

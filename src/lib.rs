@@ -59,17 +59,33 @@ pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> String {
 }
 
 #[cfg(test)]
-mod test {
+mod lib_test {
     use crate::parsers::surround::Script;
 
     use super::*;
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn t_revelations_url() {
-        let text: &str = "A popular scriptures is Rev 12:12. It is quoted often.";
-        let expect: String = "A popular scriptures is [Rev 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
-        let got: String = Script::new(text).url( &Site::JwOrg).get_text();
+    fn t_single_url() {
+        let input: &str = "A popular scriptures is Re 12:12. It is quoted often.";
+        let expect: String = "A popular scriptures is [Re 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
+        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_single_ranged_url() {
+        let input: &str = "A popular scriptures is Job 36:26-28. It is quoted often.";
+        let expect: String = "A popular scriptures is [Job 36:26-28](https://www.jw.org/en/library/bible/study-bible/books/job/36/#v18036026-v18036028). It is quoted often.".to_string();
+        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
+        assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn t_multipal_url() {
+        let input: &str = "Three well-known Bible scriptures are Proverbs 3:5, John 3:16, and Romans 8:28";
+        let expect: String = "Three well-known Bible scriptures are [Proverbs 3:5](https://www.jw.org/en/library/bible/study-bible/books/proverbs/3/#v20003005), [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016), and [Romans 8:28](https://www.jw.org/en/library/bible/study-bible/books/romans/8/#v45008028)".to_string();
+        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
         assert_eq!(got, expect)
     }
 
@@ -94,6 +110,14 @@ mod test {
     fn t_add_element_prefix_multi() {
         let input:&str = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.";
         let expect:&str = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.";
+        let got = surround(input, "**", "]]");
+        assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn t_add_element_prefix_ranged_multi() {
+        let input:&str = "Other popular scriptures include John 3:16, 17, Matthew 24:14-16, and Psalm 83:18, 17-20, they are quoted often.";
+        let expect:&str = "Other popular scriptures include **John 3:16, 17]], **Matthew 24:14-16]], and **Psalm 83:18, 17-20]], they are quoted often.";
         let got = surround(input, "**", "]]");
         assert_eq!(got, expect);
     }

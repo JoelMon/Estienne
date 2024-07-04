@@ -10,7 +10,6 @@ type ScriptSlice = (Start, End);
 type Start = usize;
 type End = usize;
 
-// lazy_static insures that the regex is compiled only once.
 // Only works with left to right languages.
 lazy_static! {
     // Matches on scriptures.
@@ -107,11 +106,11 @@ impl<'a> Script<'a> {
 
     /// Returns the original string with URL markup for all scriptures.
     pub(crate) fn url(mut self, site: &Site) -> Self {
-        // .rev method is used to avoid dealing with the changing size of the string.
+        // .rev() method is used to avoid dealing with the changing size of the string as new characters are added.
         for (start, end) in self.slice.iter().rev() {
-            let verse_slice = self.get_from_slice(&(*start, *end));
-            let bible = Bible::parse(verse_slice.as_str());
-            let url = site.get_url(&bible);
+            let verse_slice: String = self.get_from_slice(&(*start, *end));
+            let bible: Bible = Bible::parse(verse_slice.as_str());
+            let url: String = site.get_url(&bible);
 
             self.text
                 .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
@@ -129,14 +128,14 @@ impl<'a> Script<'a> {
 
     // Returns a `String` to avoid borrowing headaches
     pub(crate) fn get_from_slice(&self, slice: &(usize, usize)) -> String {
-        let foo = self.clone();
-        let text = foo.get_text();
+        let clone_obj: Script<'a> = self.clone();
+        let text: String = clone_obj.get_text();
 
         text[slice.0..slice.1].to_owned()
     }
 
     /// Returns a list of scriptures.
-    pub(crate) fn get_scripture(self) -> Vec<String> {
+    pub(crate) fn get_scriptures(self) -> Vec<String> {
         let mut scripture_list: Vec<String> = Vec::new();
 
         for i in self.slice.iter() {
@@ -147,7 +146,6 @@ impl<'a> Script<'a> {
     }
 }
 
-// Unit tests
 #[cfg(test)]
 mod test {
     use super::*;
@@ -281,7 +279,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
-        let got: Vec<String> = Script::new(text).get_scripture();
+        let got: Vec<String> = Script::new(text).get_scriptures();
         assert_eq!(got, expect)
     }
 

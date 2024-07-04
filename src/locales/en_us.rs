@@ -74,74 +74,76 @@ pub enum Book {
 impl TryFrom<&str> for Book {
     type Error = String;
 
+    // Naming as it appeares on the NWT.
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             "genesis" | "gn" => Ok(Book::Genesis),
-            "exodus" => Ok(Book::Exodus),
-            "leviticus" => Ok(Book::Leviticus),
-            "numbers" => Ok(Book::Numbers),
-            "deuteronomy" => Ok(Book::Deuteronomy),
-            "joshua" => Ok(Book::Joshua),
-            "judges" => Ok(Book::Judges),
-            "ruth" => Ok(Book::Ruth),
-            "1 samuel" => Ok(Book::FirstSamuel),
-            "2 samuel" => Ok(Book::SecondSamuel),
-            "1 kings" => Ok(Book::FirstKings),
-            "2 kings" => Ok(Book::SecondKings),
-            "1 chronicles" => Ok(Book::FirstChronicles),
-            "2 chronicles" => Ok(Book::SecondChronicles),
-            "ezra" => Ok(Book::Ezra),
-            "nehemiah" => Ok(Book::Nehemiah),
-            "esther" => Ok(Book::Esther),
+            "exodus" | "ex" => Ok(Book::Exodus),
+            "leviticus" | "le" => Ok(Book::Leviticus),
+            "numbers" | "nu" => Ok(Book::Numbers),
+            "deuteronomy" | "de" => Ok(Book::Deuteronomy),
+            "joshua" | "jos" => Ok(Book::Joshua),
+            "judges" | "jg" => Ok(Book::Judges),
+            "ruth" | "ru" => Ok(Book::Ruth),
+            "1 samuel" | "1sa" | "1 sa" => Ok(Book::FirstSamuel),
+            "2 samuel" | "2sa" | "2 sa" => Ok(Book::SecondSamuel),
+            "1 kings" | "1ki" | "1 ki" => Ok(Book::FirstKings),
+            "2 kings" | "2ki" | "2 ki" => Ok(Book::SecondKings),
+            "1 chronicles" | "1ch" | "1 ch" => Ok(Book::FirstChronicles),
+            "2 chronicles" | "2ch" | "2 ch" => Ok(Book::SecondChronicles),
+            "ezra" | "ezr" => Ok(Book::Ezra),
+            "nehemiah" | "ne" => Ok(Book::Nehemiah),
+            "esther" | "es" => Ok(Book::Esther),
             "job" => Ok(Book::Job),
-            "psalms" => Ok(Book::Psalms),
-            "proverbs" => Ok(Book::Proverbs),
-            "ecclesiastes" => Ok(Book::Ecclesiastes),
-            "song of solomon" => Ok(Book::SongOfSolomon),
-            "isaiah" => Ok(Book::Isaiah),
-            "jeremiah" => Ok(Book::Jeremiah),
-            "lamentations" => Ok(Book::Lamentations),
-            "ezekiel" => Ok(Book::Ezekiel),
-            "daniel" => Ok(Book::Daniel),
-            "hosea" => Ok(Book::Hosea),
-            "joel" => Ok(Book::Joel),
-            "amos" => Ok(Book::Amos),
-            "obadiah" => Ok(Book::Obadiah),
-            "jonah" => Ok(Book::Jonah),
-            "micah" => Ok(Book::Micah),
-            "nahum" => Ok(Book::Nahum),
-            "habakkuk" => Ok(Book::Habakkuk),
-            "zephaniah" => Ok(Book::Zephaniah),
-            "haggai" => Ok(Book::Haggai),
-            "zechariah" => Ok(Book::Zechariah),
-            "malachi" => Ok(Book::Malachi),
-            "matthew" => Ok(Book::Matthew),
-            "mark" => Ok(Book::Mark),
-            "luke" => Ok(Book::Luke),
+            "psalms" | "ps" => Ok(Book::Psalms),
+            "proverbs" | "pr" => Ok(Book::Proverbs),
+            "ecclesiastes" | "ec" => Ok(Book::Ecclesiastes),
+            "song of solomon" | "ca" => Ok(Book::SongOfSolomon),
+            "isaiah" | "isa" => Ok(Book::Isaiah),
+            "jeremiah" | "jer" => Ok(Book::Jeremiah),
+            "lamentations" | "la" => Ok(Book::Lamentations),
+            "ezekiel" | "eze" => Ok(Book::Ezekiel),
+            "daniel" | "da" => Ok(Book::Daniel),
+            "hosea" | "ho" => Ok(Book::Hosea),
+            "joel" | "joe" => Ok(Book::Joel),
+            "amos" | "am" => Ok(Book::Amos),
+            "obadiah" | "ob" => Ok(Book::Obadiah),
+            "jonah" | "jon" => Ok(Book::Jonah),
+            "micah" | "mic" => Ok(Book::Micah),
+            "nahum" | "na" => Ok(Book::Nahum),
+            "habakkuk" | "hab" => Ok(Book::Habakkuk),
+            "zephaniah" | "zep" => Ok(Book::Zephaniah),
+            "haggai" | "hag" => Ok(Book::Haggai),
+            "zechariah" | "zec" => Ok(Book::Zechariah),
+            "malachi" | "mal" => Ok(Book::Malachi),
+            "matthew" | "mt" => Ok(Book::Matthew),
+            "mark" | "mr" => Ok(Book::Mark),
+            "luke" | "lu" => Ok(Book::Luke),
             "john" | "joh" => Ok(Book::John),
-            "acts" => Ok(Book::Acts),
-            "romans" => Ok(Book::Romans),
-            "1 corinthians" => Ok(Book::FirstCorinthians),
-            "2 corinthians" => Ok(Book::SecondCorinthians),
-            "galatians" => Ok(Book::Galatians),
-            "ephesians" => Ok(Book::Ephesians),
-            "philippians" => Ok(Book::Philippians),
-            "colossians" => Ok(Book::Colossians),
-            "1 thessalonians" => Ok(Book::FirstThessalonians),
-            "2 thessalonians" => Ok(Book::SecondThessalonians),
-            "1 timothy" => Ok(Book::FirstTimothy),
-            "2 timothy" => Ok(Book::SecondTimothy),
-            "titus" => Ok(Book::Titus),
-            "philemon" => Ok(Book::Philemon),
-            "hebrews" => Ok(Book::Hebrews),
-            "james" => Ok(Book::James),
-            "1 peter" => Ok(Book::FirstPeter),
-            "2 peter" => Ok(Book::SecondPeter),
-            "1 john" => Ok(Book::FirstJohn),
-            "2 john" => Ok(Book::SecondJohn),
-            "3 john" => Ok(Book::ThirdJohn),
+            "acts" | "ac" => Ok(Book::Acts),
+            "romans" | "ro" => Ok(Book::Romans),
+            "1 corinthians" | "1co" | "1 co" => Ok(Book::FirstCorinthians),
+            "2 corinthians" | "2co" | "2 co" => Ok(Book::SecondCorinthians),
+            "galatians" | "ga" => Ok(Book::Galatians),
+            "ephesians" | "eph" => Ok(Book::Ephesians),
+            "philippians" | "php" => Ok(Book::Philippians),
+            "colossians" | "col" => Ok(Book::Colossians),
+            "1 thessalonians" | "1th" | "1 th" => Ok(Book::FirstThessalonians),
+            "2 thessalonians" | "2th" | "2 th" => Ok(Book::SecondThessalonians),
+            "1 timothy" | "1ti" | "1 ti" => Ok(Book::FirstTimothy),
+            "2 timothy" | "2ti" | "2 ti" => Ok(Book::SecondTimothy),
+            "titus" | "tit" => Ok(Book::Titus),
+            "philemon" | "phm" => Ok(Book::Philemon),
+            "hebrews" | "heb" => Ok(Book::Hebrews),
+            "james" | "jas" => Ok(Book::James),
+            "1 peter" | "1pe" | "1 pe" => Ok(Book::FirstPeter),
+            "2 peter" | "2pe" | "2 pe" => Ok(Book::SecondPeter),
+            "1 john" | "1jo" | "1 jo" => Ok(Book::FirstJohn),
+            "2 john" | "2jo" | "2 jo" => Ok(Book::SecondJohn),
+            "3 john" | "3jo" | "3 jo" => Ok(Book::ThirdJohn),
             "jude" => Ok(Book::Jude),
-            "revelation" | "rev" => Ok(Book::Revelation),
+            "revelation" | "re" => Ok(Book::Revelation),
+
             _ => Err(value.to_string()),
         }
     }
@@ -233,11 +235,7 @@ impl BibleRef for Book {
     /// True if `&str` is a valid book of the Bible.
     fn is_valid(book: &str) -> bool {
         let v: Result<Book, String> = book.try_into();
-
-        match v {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        v.is_ok()
     }
 }
 
@@ -246,11 +244,35 @@ pub enum Site {
     JwOrg,
 }
 
+/// The UrlTemplate holds the URL structure for single and ranged verse scriptures.
+pub(crate) struct UrlTemplate {
+    single: String,
+    range: String,
+}
+
 impl Url for Site {
-    fn get_template(&self) -> String {
+    fn get_template(&self) -> UrlTemplate {
         match self {
-                Site::JwOrg => "https://www.jw.org/en/library/bible/study-bible/books/{BOOKNAME}/{CHAPTER}/#v{BOOKNUM}{CHAPTER}{VERSE}".into(),
+                Site::JwOrg => UrlTemplate {single: "https://www.jw.org/en/library/bible/study-bible/books/{BOOKNAME}/{CHAPTER}/#v{BOOKNUM}{CHAPTER}{VERSE}".into(), 
+                                        range:  "https://www.jw.org/en/library/bible/study-bible/books/{BOOKNAME}/{CHAPTER}/#v{BOOKNUM}{CHAPTER}{VERSE}-v{BOOKNUM}{CHAPTER}{VERSE}".into()}
             }
+    }
+    fn get_single(&self) -> String {
+        match self {
+            Site::JwOrg => {
+                let temp = self.get_template();
+                temp.single
+            }
+        }
+    }
+
+    fn get_range(&self) -> String {
+        match self {
+            Site::JwOrg => {
+                let temp = self.get_template();
+                temp.range
+            }
+        }
     }
 }
 
