@@ -2,7 +2,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::{Borrow, Cow};
 
-use crate::{locales::en_us::Site, url::Url};
+use crate::{
+    locales::{en_us::Site, BibleError},
+    url::Url,
+};
 
 use super::scripture::Bible;
 
@@ -105,12 +108,12 @@ impl<'a> Script<'a> {
     }
 
     /// Returns the original string with URL markup for all scriptures.
-    pub(crate) fn url(mut self, site: &Site) -> Self {
+    pub(crate) fn url(mut self, site: &Site) -> Result<Self, BibleError> {
         // .rev() method is used to avoid dealing with the changing size of the string as new characters are added.
         for (start, end) in self.slice.iter().rev() {
             let verse_slice: String = self.get_from_slice(&(*start, *end));
-            let bible: Bible = Bible::parse(verse_slice.as_str());
-            let url: String = site.get_url(&bible);
+            let bible: Bible = Bible::parse(verse_slice.as_str())?;
+            let url: String = site.get_url(&bible)?;
 
             self.text
                 .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
@@ -118,7 +121,7 @@ impl<'a> Script<'a> {
             self.text.insert(*start, '[');
         }
 
-        self
+        Ok(self)
     }
 
     /// Returns the text field of the Script struct.
@@ -135,14 +138,18 @@ impl<'a> Script<'a> {
     }
 
     /// Returns a list of scriptures.
-    pub(crate) fn get_scriptures(self) -> Vec<String> {
+    pub(crate) fn get_scriptures(&self) -> Result<Vec<String>, BibleError> {
         let mut scripture_list: Vec<String> = Vec::new();
 
         for i in self.slice.iter() {
-            scripture_list.push(self.text.get(i.0..i.1).unwrap().to_string());
+            let scripture_str = self.text.get(i.0..i.1).unwrap();
+            // We need to validate if the found slice is a valid scripture
+            if Bible::parse(scripture_str).is_ok() {
+                scripture_list.push(scripture_str.to_string());
+            }
         }
 
-        scripture_list
+        Ok(scripture_list)
     }
 }
 
@@ -262,7 +269,7 @@ mod test {
     fn t_single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        let got: String = Script::new(text).url(&Site::JwOrg).get_text();
+        let got: String = Script::new(text).url(&Site::JwOrg).unwrap().get_text();
         assert_eq!(got, expect)
     }
 
@@ -270,7 +277,7 @@ mod test {
     fn t_single_url_abbr() {
         let text: &str = "A popular scriptures is Joh 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [Joh 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
-        let got: String = Script::new(text).url(&Site::JwOrg).get_text();
+        let got: String = Script::new(text).url(&Site::JwOrg).unwrap().get_text();
         assert_eq!(got, expect)
     }
 
@@ -279,7 +286,7 @@ mod test {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
-        let got: Vec<String> = Script::new(text).get_scriptures();
+        let got: Vec<String> = Script::new(text).get_scriptures().unwrap();
         assert_eq!(got, expect)
     }
 

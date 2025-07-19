@@ -1,4 +1,4 @@
-use crate::locales::{en_us::Book, BibleRef};
+use crate::locales::{en_us::Book, BibleError, BibleRef};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -40,44 +40,44 @@ impl<'a> Bible<'a> {
         self.verse
     }
 
-    pub(crate) fn get_idx(&self) -> u8 {
-        Book::get_index(self.book).expect("expected a valid book")
+    pub(crate) fn get_idx(&self) -> Result<u8, BibleError> {
+        Book::get_index(self.book)
     }
 
     pub(crate) fn is_range(&self) -> bool {
-        match self.get_verse().contains('-') {
-            true => true,
-            false => false,
-        }
+        self.get_verse().contains('-')
     }
 
-    pub(crate) fn parse(scripture: &'a str) -> Bible {
-        let re: &RE = &RE;
+    pub(crate) fn parse(scripture: &'a str) -> Result<Bible<'a>, BibleError> {
+        let caps = RE
+            .captures(scripture)
+            .ok_or_else(|| BibleError::ParsingError(scripture.to_string()))?;
 
-        let scripture: regex::Captures = match Book::is_valid(
-            RE.captures(scripture)
-                .unwrap()
-                .name("book")
-                .unwrap()
-                .as_str(),
-        ) {
-            true => RE.captures(scripture).unwrap(),
+        let book_name = caps
+            .name("book")
+            .ok_or_else(|| BibleError::ParsingError(scripture.to_string()))?
+            .as_str();
 
-            false => {
-                //TODO: Improve this with Errors
-                panic!();
-            }
-        };
-
-        Self {
-            book: scripture.name("book").unwrap().as_str(),
-            //TODO Fix this part so LOCALES can work.
-            booknum: Book::get_index(scripture.name("book").unwrap().as_str())
-                .unwrap()
-                .to_string(),
-            chapter: scripture.name("chapter").unwrap().as_str(),
-            verse: scripture.name("verse").unwrap().as_str(),
+        if !Book::is_valid(book_name) {
+            return Err(BibleError::BookNotFound(book_name.to_string()));
         }
+
+        let booknum = Book::get_index(book_name)?.to_string();
+        let chapter = caps
+            .name("chapter")
+            .ok_or_else(|| BibleError::ParsingError(scripture.to_string()))?
+            .as_str();
+        let verse = caps
+            .name("verse")
+            .map(|m| m.as_str())
+            .unwrap_or_default();
+
+        Ok(Self {
+            book: book_name,
+            booknum,
+            chapter,
+            verse,
+        })
     }
 }
 
@@ -88,18 +88,14 @@ mod test {
     use pretty_assertions::assert_eq;
 
     #[test]
-    #[should_panic]
-    // Should panic because this book should have been filtered out
     fn t_non_existing_book() {
         let input: &str = "Mary 3:16";
-        let expect: Bible = Bible {
-            book: "Mary",
-            chapter: "3",
-            verse: "16",
-            booknum: "0".into(),
-        };
-        let got: Bible = Bible::parse(input);
-        assert_eq!(got, expect);
+        let got = Bible::parse(input);
+        assert!(got.is_err());
+        assert_eq!(
+            got.unwrap_err(),
+            BibleError::BookNotFound("Mary".to_string())
+        );
     }
 
     #[test]
@@ -111,7 +107,7 @@ mod test {
             verse: "16",
             booknum: "43".into(),
         };
-        let result: Bible = Bible::parse(input);
+        let result: Bible = Bible::parse(input).unwrap();
         assert_eq!(result, expect);
     }
 
@@ -124,7 +120,7 @@ mod test {
             verse: "16",
             booknum: "54".into(),
         };
-        let result: Bible = Bible::parse(input);
+        let result: Bible = Bible::parse(input).unwrap();
         assert_eq!(result, expect);
     }
 
@@ -137,7 +133,7 @@ mod test {
             verse: "16-20",
             booknum: "54".into(),
         };
-        let result: Bible = Bible::parse(input);
+        let result: Bible = Bible::parse(input).unwrap();
         assert_eq!(result, expect);
     }
 }

@@ -29,10 +29,11 @@
 //!Contributions are welcomed, but please be aware that the project is still in its prototype phase and large portions of code might change at any moment.
 //!Feel free to open an issue if you have any questions or suggestions.
 
-mod locales;
+pub mod locales;
 mod parsers;
 mod url;
 use locales::en_us::Site;
+use locales::BibleError;
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -43,25 +44,32 @@ pub enum Locale {
 }
 
 /// Adds the prefix and postfix around each scripture found in the `text`.
-pub fn surround<'a, S: Into<String> + Clone>(text: S, prefix: &'a str, postfix: &'a str) -> String {
-    parsers::surround::Script::new(text)
+pub fn surround<'a, S: Into<String> + Clone>(
+    text: S,
+    prefix: &'a str,
+    postfix: &'a str,
+) -> Result<String, BibleError> {
+    Ok(parsers::surround::Script::new(text)
         .prefix(prefix)
         .postfix(postfix)
         .surround()
-        .get_text()
+        .get_text())
 }
 
 /// Links scriptures found to a online Bible.
-pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> String {
-    parsers::surround::Script::new(text)
-        .url(site)
-        .get_text()
+pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> Result<String, BibleError> {
+    Ok(parsers::surround::Script::new(text)
+        .url(site)?
+        .get_text())
+}
+
+/// Returns a list of scriptures found in the text.
+pub fn get_scriptures<S: Into<String> + Clone>(text: S) -> Result<Vec<String>, BibleError> {
+    parsers::surround::Script::new(text).get_scriptures()
 }
 
 #[cfg(test)]
 mod lib_test {
-    use crate::parsers::surround::Script;
-
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -69,7 +77,7 @@ mod lib_test {
     fn t_single_url() {
         let input: &str = "A popular scriptures is Re 12:12. It is quoted often.";
         let expect: String = "A popular scriptures is [Re 12:12](https://www.jw.org/en/library/bible/study-bible/books/revelation/12/#v66012012). It is quoted often.".to_string();
-        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
+        let got: String = url(&Site::JwOrg, input).unwrap();
         assert_eq!(got, expect)
     }
 
@@ -77,7 +85,7 @@ mod lib_test {
     fn t_single_ranged_url() {
         let input: &str = "A popular scriptures is Job 36:26-28. It is quoted often.";
         let expect: String = "A popular scriptures is [Job 36:26-28](https://www.jw.org/en/library/bible/study-bible/books/job/36/#v18036026-v18036028). It is quoted often.".to_string();
-        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
+        let got: String = url(&Site::JwOrg, input).unwrap();
         assert_eq!(got, expect)
     }
 
@@ -85,7 +93,7 @@ mod lib_test {
     fn t_multipal_url() {
         let input: &str = "Three well-known Bible scriptures are Proverbs 3:5, John 3:16, and Romans 8:28";
         let expect: String = "Three well-known Bible scriptures are [Proverbs 3:5](https://www.jw.org/en/library/bible/study-bible/books/proverbs/3/#v20003005), [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016), and [Romans 8:28](https://www.jw.org/en/library/bible/study-bible/books/romans/8/#v45008028)".to_string();
-        let got: String = Script::new(input).url( &Site::JwOrg).get_text();
+        let got: String = url(&Site::JwOrg, input).unwrap();
         assert_eq!(got, expect)
     }
 
@@ -93,7 +101,7 @@ mod lib_test {
     fn t_add_element_prefix_single() {
         let input: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
-        let got = surround(input, "**", "]]");
+        let got = surround(input, "**", "]]").unwrap();
         assert_eq!(got, expect);
     }
 
@@ -102,7 +110,7 @@ mod lib_test {
     fn t_add_element_prefix_single_to_string() {
         let input: String = "Another popular scripture is John 3:16, it's quoted often.".into();
         let expect: &str = "Another popular scripture is **John 3:16]], it's quoted often.";
-        let got = surround(input, "**", "]]");
+        let got = surround(input, "**", "]]").unwrap();
         assert_eq!(got, expect);
     }
 
@@ -110,7 +118,7 @@ mod lib_test {
     fn t_add_element_prefix_multi() {
         let input:&str = "Other popular scriptures include John 3:16, Matthew 24:14, and Psalm 83:18, they are quoted often.";
         let expect:&str = "Other popular scriptures include **John 3:16]], **Matthew 24:14]], and **Psalm 83:18]], they are quoted often.";
-        let got = surround(input, "**", "]]");
+        let got = surround(input, "**", "]]").unwrap();
         assert_eq!(got, expect);
     }
 
@@ -118,7 +126,7 @@ mod lib_test {
     fn t_add_element_prefix_ranged_multi() {
         let input:&str = "Other popular scriptures include John 3:16, 17, Matthew 24:14-16, and Psalm 83:18, 17-20, they are quoted often.";
         let expect:&str = "Other popular scriptures include **John 3:16, 17]], **Matthew 24:14-16]], and **Psalm 83:18, 17-20]], they are quoted often.";
-        let got = surround(input, "**", "]]");
+        let got = surround(input, "**", "]]").unwrap();
         assert_eq!(got, expect);
     }
 
@@ -126,7 +134,32 @@ mod lib_test {
     fn t_add_element_prefix_multi_no_scriptures() {
         let input: &str = "There are no scriptures in this line.";
         let expect: &str = "There are no scriptures in this line.";
-        let got = surround(input, "**", "]]");
+        let got = surround(input, "**", "]]").unwrap();
         assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn t_url_invalid_book() {
+        let input: &str = "A popular scriptures is Mary 12:12. It is quoted often.";
+        let result = url(&Site::JwOrg, input);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            BibleError::BookNotFound("Mary".to_string())
+        );
+    }
+
+    #[test]
+    fn t_url_no_scripture() {
+        let input: &str = "This is not a scripture.";
+        let result = url(&Site::JwOrg, input);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn t_get_multiple_scriptures() {
+        let input: &str = "A popular scripture is John 3:16. Another is Matthew 24:14.";
+        let result = get_scriptures(input).unwrap();
+        assert_eq!(result, vec!["John 3:16", "Matthew 24:14"]);
     }
 }
