@@ -32,7 +32,7 @@
 pub mod locales;
 mod parsers;
 mod url;
-use locales::en_us::Site;
+use locales::nwt_en::Site;
 use locales::BibleError;
 
 #[allow(non_camel_case_types)]
@@ -58,6 +58,7 @@ pub fn surround<'a, S: Into<String> + Clone>(
 
 /// Links scriptures found to a online Bible.
 pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> Result<String, BibleError> {
+    // TODO: Flip the order of the paramaters around, text should be first to follow the pattern set with the other functions.
     Ok(parsers::surround::Script::new(text)
         .url(site)?
         .get_text())
