@@ -1,10 +1,11 @@
-use crate::locales::{en_us::Book, BibleError, BibleRef};
+use crate::locales::{BibleError, BibleRef, en_us::Book};
 use lazy_static::lazy_static;
 use regex::Regex;
 
 lazy_static! {
-    static ref RE: regex::Regex =
-        // Regular expression matches the pattern for the name of the book or letter, chapter, and verse.
+    /// Regular expresion for capturing scriptures
+    /// Matches the pattern for the name of the book or letter, chapter, and verse.
+    pub static ref RE: regex::Regex =
                 Regex::new(r"(?<book>(?:[1234]\s?)?[a-zA-Z]+)\s*(?<chapter>\d+)(?::(?<verse>\d+(?:[—–-]\d+)?(?:,\s*\d+(?:[—–-]\d+)?)*(?:;\s*\d+(?::\d+(?:[—–-]\d+)?(?:,\s*\d+(?:[—–-]\d+)?)*))*)?)").expect("error while compiling the FIND_BOOK regex in scripture");
 }
 
@@ -67,10 +68,7 @@ impl<'a> Bible<'a> {
             .name("chapter")
             .ok_or_else(|| BibleError::ParsingError(scripture.to_string()))?
             .as_str();
-        let verse = caps
-            .name("verse")
-            .map(|m| m.as_str())
-            .unwrap_or_default();
+        let verse = caps.name("verse").map(|m| m.as_str()).unwrap_or_default();
 
         Ok(Self {
             book: book_name,

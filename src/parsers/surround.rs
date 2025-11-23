@@ -1,6 +1,5 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::borrow::{Borrow, Cow};
+use crate::parsers::scripture::RE;
 
 use crate::{
     locales::{en_us::Site, BibleError},
@@ -12,12 +11,6 @@ use super::scripture::Bible;
 type ScriptSlice = (Start, End);
 type Start = usize;
 type End = usize;
-
-// Only works with left to right languages.
-lazy_static! {
-    // Matches on scriptures.
-    static ref RE: regex::Regex = Regex::new(r"(?:[1234]\s?)?([a-zA-Z]+)(\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\s*\d+[—–-]\d+|,\s*\d+)*(?:;\s?\d+(?::(?:\d+[—–-]\d+|\d+)(?:,\d+[—–-]\d+|,\d+)*|;))*)?)").expect("error while compiling the regex in surround");
-}
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct Elements<'a> {
