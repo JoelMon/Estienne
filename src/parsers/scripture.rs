@@ -1,4 +1,4 @@
-use crate::locales::{BibleError, BibleRef, en_us::Book};
+use crate::locales::{BibleError, BibleRef, nwt_en::Book};
 use lazy_static::lazy_static;
 use regex::Regex;
 

@@ -2,7 +2,7 @@ use std::borrow::{Borrow, Cow};
 use crate::parsers::scripture::RE;
 
 use crate::{
-    locales::{en_us::Site, BibleError},
+    locales::{nwt_en::Site, BibleError},
     url::Url,
 };
 

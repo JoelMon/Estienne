@@ -1,6 +1,6 @@
 use crate::{
     locales::{
-        en_us::{Book, UrlTemplate},
+        nwt_en::{Book, UrlTemplate},
         BibleError,
     },
     parsers::scripture::Bible,
@@ -105,7 +105,7 @@ pub trait Url {
 mod test {
 
     use super::*;
-    use crate::locales::en_us::Site;
+    use crate::locales::nwt_en::Site;
     use pretty_assertions::assert_eq;
 
     #[test]

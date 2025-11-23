@@ -75,8 +75,8 @@ impl TryFrom<&str> for Book {
     type Error = String;
 
     // Naming as it appeares on the NWT.
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value.to_lowercase().as_str() {
+    fn try_from(book: &str) -> Result<Self, Self::Error> {
+        match book.to_lowercase().as_str() {
             "genesis" | "gn" => Ok(Book::Genesis),
             "exodus" | "ex" => Ok(Book::Exodus),
             "leviticus" | "le" => Ok(Book::Leviticus),
@@ -144,14 +144,15 @@ impl TryFrom<&str> for Book {
             "jude" => Ok(Book::Jude),
             "revelation" | "re" => Ok(Book::Revelation),
 
-            _ => Err(value.to_string()),
+            // Return the string containing the non-found scripture as an error.
+            _ => Err(book.to_string()),
         }
     }
 }
 
 impl From<Book> for &str {
-    fn from(value: Book) -> Self {
-        match value {
+    fn from(book: Book) -> Self {
+        match book {
             Book::Genesis => "genesis",
             Book::Exodus => "exodus",
             Book::Leviticus => "leviticus",
