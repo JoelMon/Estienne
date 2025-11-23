@@ -43,7 +43,17 @@ pub enum Locale {
     es_es,
 }
 
-/// Adds the prefix and postfix around each scripture found in the `text`.
+/// Adds a prefix and postfix around each scripture found in and returns the modified string.
+///
+/// ## Example 
+/// ```
+/// use est::surround;
+/// 
+/// let text: &str = "The scripture John 3:16 is known by a lot of people.";
+/// let expected:String = "The scripture <strong>John 3:16</strong> is known by a lot of people.".to_string();
+/// assert_eq!(expected, surround(text, "<strong>", "</strong>").unwrap());
+/// 
+/// ```
 pub fn surround<'a, S: Into<String> + Clone>(
     text: S,
     prefix: &'a str,
@@ -56,7 +66,22 @@ pub fn surround<'a, S: Into<String> + Clone>(
         .get_text())
 }
 
-/// Links scriptures found to a online Bible.
+/// Adds Markdown link syntax around found scriptures to an Online Bible and the modified string is returned.
+/// When possible, it will link directly to the scripture being referenced.
+/// 
+/// The url function takes a Site enum coresponding to the translation being used.
+/// As an example, if you were building links for the english version of the online NWT translation,
+/// you would use `est::locales::nwt_en::Site::JwOrg` to build the proper link.
+/// 
+/// ## Example
+/// ```
+/// use est::url;
+/// use est::locales::nwt_en::Site::JwOrg;
+/// 
+/// let text: &str = "All friends should practice Proverbs 17:17!";
+/// let expected:String = "All friends should practice [Proverbs 17:17](https://www.jw.org/en/library/bible/study-bible/books/proverbs/17/#v20017017)!".to_string();
+/// assert_eq!(expected, est::url(&JwOrg, text).unwrap());
+/// ```
 pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> Result<String, BibleError> {
     // TODO: Flip the order of the paramaters around, text should be first to follow the pattern set with the other functions.
     Ok(parsers::surround::Script::new(text)
@@ -64,7 +89,16 @@ pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> Result<String, Bibl
         .get_text())
 }
 
-/// Returns a list of scriptures found in the text.
+/// Returns a vector of the scriptures found in the string passed in.
+/// 
+/// ## Example
+/// ```
+/// use est::get_scriptures;
+/// 
+/// let text: &str = "A popular scripture is John 3:16, it is quoted often.";
+/// let expected:Vec<String> = vec!["John 3:16".to_string()];
+/// assert_eq!(expected, est::get_scriptures(text).unwrap());
+/// ```
 pub fn get_scriptures<S: Into<String> + Clone>(text: S) -> Result<Vec<String>, BibleError> {
     parsers::surround::Script::new(text).get_scriptures()
 }
