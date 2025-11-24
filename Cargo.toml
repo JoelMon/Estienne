@@ -1,6 +1,6 @@
 [package]
 name = "estienne"
-version = "0.8.0-alpha"
+version = "0.8.0"
 edition = "2024"
 authors = ["Joel Montes de Oca"]
 description = "Estienne is a library that scans plain text for Bible references and helps to format or link them to online Bibles, among other things."
@@ -8,6 +8,7 @@ repository = "https://github.com/JoelMon/Estienne"
 readme = "README.md"
 keywords = ["bible","scripture", "parser", "nwt", "markdown"]
 categories = ["text-editors", "parsing", "encoding", "localization", "internationalization" ]
+license = "MIT"
 license-file = "LICENSE.txt"
 
 [lib]
