@@ -7,77 +7,83 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Project Status: WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
-Estienne is a simple-to-use Rust library for finding and interacting with Biblical scripture references in text. The focus of Estienne is to provide a library for building applications that need to interact with files that contain Biblical scriptures, such as lecture notes or articles. No special syntax needs to be used in conjunction with scriptures for Estienne to parse the text successfully.
+Estienne is a Rust library that scans plain text for Bible references and helps you format or link them to online Bibles. It targets apps that work with notes, articles, and transcripts where scripture mentions appear in normal prose. No special markup is required for detection.
 
-Estienne is still in its initial stages and not yet ready for production use.
+Estienne is early-stage software and the API can change. It already ships tested helpers for formatting and linking verses.
 
-## Features
+## What Estienne Does
 
-- **Find Scriptures**: Automatically detect Bible scripture references in a string.
-- **Surround**: Add a prefix and/or postfix to each detected scripture (e.g., for styling).
-- **URL Linking**: Convert scriptures into markdown-formatted URLs pointing to an online Bible (currently supports JW.org).
-- **Locale-Aware**: Designed with localization in mind (currently supports `en_us`).
+- Detect Bible references in a string using a locale-aware parser.
+- Wrap references with custom prefix and postfix text for styling.
+- Turn references into markdown links that point to a specific online Bible (currently JW.org).
+- Return the raw references or their index positions for custom processing.
 
 ## Installation
 
-Add Estienne to your `Cargo.toml` file:
+Add Estienne to your `Cargo.toml`:
 
 ```toml
 [dependencies]
 est = "0.8.0-alpha"
 ```
 
-## Usage
+## Quick Examples
 
-Here are a few basic examples of how to use Estienne.
-
-### Surrounding a Scripture with a Prefix and Postfix
-
-You can easily wrap any found scriptures with custom text, which is useful for formatting.
+### Highlight references inline
 
 ```rust
-use est;
-
-fn main() {
-    let text = "A popular scripture is John 3:16, it's quoted often.";
-    let formatted_text = est::surround(text, "<strong>", "</strong>");
-    
-    // formatted_text is now:
-    // "A popular scripture is <strong>John 3:16</strong>, it's quoted often."
-    println!("{}", formatted_text);
-}
+let text = "A popular scripture is John 3:16, it's quoted often.";
+let highlighted = est::surround(text, "<strong>", "</strong>").unwrap();
+assert_eq!(
+    highlighted,
+    "A popular scripture is <strong>John 3:16</strong>, it's quoted often."
+);
 ```
 
-### Generating a URL for a Scripture
-
-Estienne can convert scripture references into clickable markdown links.
+### Create markdown links to JW.org
 
 ```rust
-use est;
-use est::locales::en_us::Site;
+use est::locales::nwt_en::Site::JwOrg;
 
-fn main() {
-    let text = "Read Revelation 21:3-4 for comfort.";
-    let linked_text = est::url(&Site::JwOrg, text);
+let text = "Read Revelation 21:3-4 for comfort.";
+let linked = est::url(&JwOrg, text).unwrap();
+assert!(linked.contains("[Revelation 21:3-4]"));
+assert!(linked.contains("https://www.jw.org/en/library/bible/study-bible/books/revelation/21/#v66021003-v66021004"));
+```
 
-    // linked_text is now:
-    // "Read [Revelation 21:3-4](https://www.jw.org/en/library/bible/study-bible/books/revelation/21/#v66021003-v66021004) for comfort."
-    println!("{}", linked_text);
-}
+### Extract scriptures as plain strings
+
+```rust
+let text = "Cross reference Psalm 83:18 with Matthew 24:14.";
+let refs = est::get_scriptures(text).unwrap();
+assert_eq!(refs, vec!["Psalm 83:18", "Matthew 24:14"]);
+```
+
+### Get the locations of each reference
+
+```rust
+use est::{get_locations, Locations};
+
+let text = "John 3:16 pairs well with 1 John 4:8.";
+let locations: Locations = get_locations(text);
+assert_eq!(locations.slices, vec![(0, 9), (24, 35)]);
+assert_eq!(locations.string, text);
 ```
 
 ## The Name
 The library is named after Robert Estienne, a French theologian of the early Christian era. 
 He is best remembered for being the first to print the New Testament divided with numbered verses. [Read More](https://www.jw.org/finder?wtlocale=E&docid=2016167&srctype=wol&srcid=share&par=14)
 
-## The Purpose
-The purpose of the library is to provide a simple way to manipulate Biblical verses within a line of text. 
-The API will allow for easy manipulations of the verses, such as:
-- Returning a list of verses found in a line of text
-- Allowing a verses to be:
-   - prefixed with arbitrary text 
-   - suffixed with arbitrary text
-   - etc.
+## API at a glance
+- `surround(text, prefix, postfix) -> Result<String, BibleError>`: wraps each detected reference.
+- `url(&Site, text) -> Result<String, BibleError>`: inserts markdown links to the given site.
+- `get_scriptures(text) -> Result<Vec<String>, BibleError>`: returns validated references.
+- `get_locations(text) -> Locations`: returns reference start and end indexes plus the original string.
+
+## Status and roadmap
+- Current focus: stability, better locale coverage, and richer parsing of ranged references.
+- Short term: expand supported locales and improve error messages.
+- Expect breaking changes until a stable release is tagged.
 
 ## Contributing
 Contributions are welcomed, but please be aware that the project is still in its prototype phase and large portions of code might change at any moment. Feel free to open an issue if you have any questions, suggestions, or bug reports.
