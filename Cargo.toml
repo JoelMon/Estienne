@@ -7,7 +7,7 @@ description = "Estienne is a library that scans plain text for Bible references 
 repository = "https://github.com/JoelMon/Estienne"
 readme = "README.md"
 keywords = ["bible","scripture", "parser", "nwt", "markdown"]
-categories = ["text-processing", "parsing", "bible", "markdown" ]
+categories = ["text-processing", "parsing-tools", "encoding", "text-editors" ]
 license-file = "LICENSE.txt"
 
 [lib]
