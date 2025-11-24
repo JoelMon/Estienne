@@ -7,9 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Project Status: WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
-Estienne is a Rust library that scans plain text for Bible references and helps you format or link them to online Bibles. It targets apps that work with notes, articles, and transcripts where scripture mentions appear in normal prose. No special markup is required for detection.
+Estienne is a Rust library that scans plain text for Bible scriptures and helps you format or link them to online Bibles. It targets apps that work with notes, articles, and transcripts where scripture mentions appear in normal prose. No special markup is required for detecting and manipulating scriptures in text.
 
-Estienne is early-stage software and the API can change. It already ships tested helpers for formatting and linking verses.
+Estienne is early-stage software and the API can change. It already ships tested functions for formatting and linking verses and can be used.
 
 ## What Estienne Does
 
@@ -36,15 +36,11 @@ He is best remembered for being the first to print the New Testament divided wit
 
 ## Installation
 
-Add Estienne to your `Cargo.toml`:
-
-
-```toml
-[dependencies]
-est = "0.8.0-alpha"
+```shell
+cargo add estienne
 ```
 
-## Quick Examples
+## Examples
 
 ### Highlight references inline
 
@@ -75,7 +71,7 @@ let refs = est::get_scriptures(text).unwrap();
 assert_eq!(refs, vec!["Psalm 83:18", "Matthew 24:14"]);
 ```
 
-### Get the locations of each reference
+### Get the locations of each scripture found in a string
 
 ```rust
 use est::{get_locations, Locations};
@@ -87,8 +83,8 @@ assert_eq!(locations.string, text);
 ```
 
 ## Contributing
-Contributions are welcomed, but please be aware that the project is still in its prototype phase and large portions of code might change at any moment. Feel free to open an issue if you have any questions, suggestions, or bug reports.
+Contributions are welcomed, but please be aware that the project is still in a very early phase and large portions of code might change at any moment. Feel free to open an issue if you have any questions, suggestions, or bug reports.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
