@@ -18,9 +18,26 @@ Estienne is early-stage software and the API can change. It already ships tested
 - Turn references into markdown links that point to a specific online Bible (currently JW.org).
 - Return the raw references or their index positions for custom processing.
 
+## The Name
+The library is named after Robert Estienne, a French theologian of the early Christian era. 
+He is best remembered for being the first to print the New Testament divided with numbered verses. [Read More](https://www.jw.org/finder?wtlocale=E&docid=2016167&srctype=wol&srcid=share&par=14)
+
+
+## API at a glance
+- `surround(text, prefix, postfix) -> Result<String, BibleError>`: wraps each detected reference.
+- `url(&Site, text) -> Result<String, BibleError>`: inserts markdown links to the given site.
+- `get_scriptures(text) -> Result<Vec<String>, BibleError>`: returns validated references.
+- `get_locations(text) -> Locations`: returns reference start and end indexes plus the original string.
+
+## Status and roadmap
+- Current focus: stability, better locale coverage, and richer parsing of ranged references.
+- Short term: expand supported locales and improve error messages.
+- Expect breaking changes until a stable release is tagged.
+
 ## Installation
 
 Add Estienne to your `Cargo.toml`:
+
 
 ```toml
 [dependencies]
@@ -47,8 +64,7 @@ use est::locales::nwt_en::Site::JwOrg;
 
 let text = "Read Revelation 21:3-4 for comfort.";
 let linked = est::url(&JwOrg, text).unwrap();
-assert!(linked.contains("[Revelation 21:3-4]"));
-assert!(linked.contains("https://www.jw.org/en/library/bible/study-bible/books/revelation/21/#v66021003-v66021004"));
+assert_eq!(linked, vec!["Read [Revelation 21:3-4](https://www.jw.org/en/library/bible/study-bible/books/revelation/21/#v66021003-v66021004) for comfort."]);
 ```
 
 ### Extract scriptures as plain strings
@@ -69,21 +85,6 @@ let locations: Locations = get_locations(text);
 assert_eq!(locations.slices, vec![(0, 9), (24, 35)]);
 assert_eq!(locations.string, text);
 ```
-
-## The Name
-The library is named after Robert Estienne, a French theologian of the early Christian era. 
-He is best remembered for being the first to print the New Testament divided with numbered verses. [Read More](https://www.jw.org/finder?wtlocale=E&docid=2016167&srctype=wol&srcid=share&par=14)
-
-## API at a glance
-- `surround(text, prefix, postfix) -> Result<String, BibleError>`: wraps each detected reference.
-- `url(&Site, text) -> Result<String, BibleError>`: inserts markdown links to the given site.
-- `get_scriptures(text) -> Result<Vec<String>, BibleError>`: returns validated references.
-- `get_locations(text) -> Locations`: returns reference start and end indexes plus the original string.
-
-## Status and roadmap
-- Current focus: stability, better locale coverage, and richer parsing of ranged references.
-- Short term: expand supported locales and improve error messages.
-- Expect breaking changes until a stable release is tagged.
 
 ## Contributing
 Contributions are welcomed, but please be aware that the project is still in its prototype phase and large portions of code might change at any moment. Feel free to open an issue if you have any questions, suggestions, or bug reports.
