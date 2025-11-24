@@ -24,7 +24,7 @@ Add Estienne to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-est = "0.7.1-alpha"
+est = "0.8.0-alpha"
 ```
 
 ## Usage
