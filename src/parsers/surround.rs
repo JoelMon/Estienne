@@ -8,40 +8,69 @@ use crate::{
 
 use super::scripture::Bible;
 
-type ScriptSlice = (Start, End);
+/// _ScriptSlice_ type describes as a tuple the begining and ending index plus one for a scripture found in a string.
+///
+/// Take the following string as an example, "Scripture Mathrew 3:16."
+/// The `ScriptSlice` will be as follows:
+/// - Start = 10
+/// - End = 22 (21 + 1)
+pub type ScriptSlice = (Start, End);
 type Start = usize;
 type End = usize;
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+/// The _ScriptureCollection_ is a vector contain scruptures. TODO: Fix docs
+pub type ScriptureCollection = Vec<String>;
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
+/// _Elements_ is a struct that descibes the _elements_ that will be placed before and after a scripture.
+/// For example, if the elements, `<strong>` and `</strong>` were to surround a scripture then `<strong>` would be
+/// the prefix with a prefix length of `5` and `</strong>` would be the postfix with a length of `6`. 
+/// The prefix and postfix lengths are important to correctly calculate the insertion of the lements before 
+/// and after the scripture(s).
 struct Elements<'a> {
+    /// The optional prefix string that will be inserted before a scripture.
     prefix: Option<&'a str>,
+    /// The lenth of chareters in the prefix.
     prefix_len: Option<usize>,
+    /// The optional postfix string that will be inserted after a scripture.
     postfix: Option<&'a str>,
+    /// The lenth of chareters in the postfix.
     postfix_len: Option<usize>,
 }
+#[derive(Debug,PartialEq, Eq, PartialOrd, Ord, Clone)]
+/// _Locations_ contains the start and end indexes of all the scriptures found in the string.
+pub struct Locations{
+    /// The start and end indexes of all the scriptures found in the string passed in.
+    pub slices: Vec<ScriptSlice>,
+    /// The original string that was passed in.
+    pub string: String,
+}
+
+
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// The _Script_ struct describes properties needed for sucessfully wrapping a scripture with _elements_.
 pub struct Script<'a> {
+    /// The _elements_ that will wrap around the scripture. i.e. the _prefix_ and _postfix_.
     elements: Elements<'a>,
-    slice: Vec<ScriptSlice>,
-    text: String,
+    /// Both the start and end (+1) index for the scripture(s) within the string to be able to locate where the scriptures are found within the string.
+    slices: Vec<ScriptSlice>,
+    /// The full string that was passed into the library that contains the scripture.
+    string: String,
 }
 
 #[allow(unused_variables)]
 impl<'a> Script<'a> {
-    /// Find all _potential_ scriptures in a line and return the beginning index and length.
+    /// Find all _potential_ scriptures in a string and return the beginning index and length.
+    /// Will accept `&str` or `String` types.
     pub(crate) fn new<S>(text: S) -> Self
     where
         S: Into<String> + Clone,
     {
         let re: &regex::Regex = &RE;
 
-        // TODO: Fix this section of code. Too much cloning, find more concise exp.
-        //       The use of Cow is due to regex requiring a &str but it is possible that
-        //       `text` is `String` or `&str`, eliminating the use of the `as_str()` method.
-        let text_copy: S = text.clone();
-        let text1: Cow<str> = Cow::from(text_copy.into());
-        let matches = re.find_iter(Cow::borrow(&text1));
+        let text_to_str: Cow<str> = Cow::from(text.clone().into());
+        let matches = re.find_iter(Cow::borrow(&text_to_str));
 
         let mut scrip_slices: Vec<ScriptSlice> = Vec::new();
         for script in matches {
@@ -49,8 +78,8 @@ impl<'a> Script<'a> {
         }
 
         Self {
-            text: text.into(),
-            slice: scrip_slices,
+            string: text.into(),
+            slices: scrip_slices,
             elements: Elements {
                 ..Default::default()
             },
@@ -83,15 +112,15 @@ impl<'a> Script<'a> {
     /// `surround()` does not verify if a captured _scripture_ is valid.
     pub(crate) fn surround(mut self) -> Self {
         // .rev method is used to avoid dealing with the changing size of the string.
-        for item in self.slice.iter().rev() {
-            self.text.insert_str(
+        for item in self.slices.iter().rev() {
+            self.string.insert_str(
                 item.0 + (item.1 - item.0),
                 self.elements
                     .postfix
                     .map_or("", |postfix_value| postfix_value),
             );
 
-            self.text.insert_str(
+            self.string.insert_str(
                 item.0,
                 self.elements.prefix.map_or("", |prefix_value| prefix_value),
             );
@@ -103,15 +132,15 @@ impl<'a> Script<'a> {
     /// Returns the original string with URL markup for all scriptures.
     pub(crate) fn url(mut self, site: &Site) -> Result<Self, BibleError> {
         // .rev() method is used to avoid dealing with the changing size of the string as new characters are added.
-        for (start, end) in self.slice.iter().rev() {
+        for (start, end) in self.slices.iter().rev() {
             let verse_slice: String = self.get_from_slice(&(*start, *end));
             let bible: Bible = Bible::parse(verse_slice.as_str())?;
             let url: String = site.get_url(&bible)?;
 
-            self.text
+            self.string
                 .insert_str(*start + (*end - *start), format!("]({})", url).as_str());
 
-            self.text.insert(*start, '[');
+            self.string.insert(*start, '[');
         }
 
         Ok(self)
@@ -119,7 +148,7 @@ impl<'a> Script<'a> {
 
     /// Returns the text field of the Script struct.
     pub(crate) fn get_text(self) -> String {
-        self.text
+        self.string
     }
 
     // Returns a `String` to avoid borrowing headaches
@@ -130,13 +159,14 @@ impl<'a> Script<'a> {
         text[slice.0..slice.1].to_owned()
     }
 
-    /// Returns a list of scriptures.
-    pub(crate) fn get_scriptures(&self) -> Result<Vec<String>, BibleError> {
-        let mut scripture_list: Vec<String> = Vec::new();
+    /// Returns a collection of scriptures found in the string passed in.
+    pub(crate) fn get_scriptures(&self) -> Result<ScriptureCollection, BibleError> {
+        let mut scripture_list:Vec<String>  = Vec::new();
 
-        for i in self.slice.iter() {
-            let scripture_str = self.text.get(i.0..i.1).unwrap();
-            // We need to validate if the found slice is a valid scripture
+        for i in self.slices.iter() {
+            let scripture_str: &str = self.string.get(i.0..i.1).unwrap();
+
+            // We need to validate if the found slice contains a valid Bible book name.
             if Bible::parse(scripture_str).is_ok() {
                 scripture_list.push(scripture_str.to_string());
             }
@@ -144,6 +174,12 @@ impl<'a> Script<'a> {
 
         Ok(scripture_list)
     }
+
+    /// Returns the index of the start and end of each scripture found and also the original string.
+    pub(crate) fn get_locations(&self) -> Locations {
+        Locations { slices: self.slices.clone(), string: self.string.clone() }
+    }
+
 }
 
 #[cfg(test)]
@@ -152,7 +188,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn t_is_prefix() {
+    fn is_prefix() {
         let text: &str = "Testing";
         let result_true: Script = Script::new(text).prefix("true");
         let result_false: Script = Script::new(text); // Defaults to `None`.
@@ -162,7 +198,7 @@ mod test {
     }
 
     #[test]
-    fn t_is_postfix() {
+    fn is_postfix() {
         let text: &str = "Testing";
         let result_true: Script = Script::new(text).postfix("true");
         let result_false: Script = Script::new(text); // Defaults to `None`.
@@ -172,30 +208,30 @@ mod test {
     }
 
     #[test]
-    fn t_find_slice_1() {
+    fn find_slice_1() {
         let text: &str = "A popular scripture is John 3:16.";
         let expect: Vec<(usize, usize)> = vec![(23, 32)];
         let result: Script = Script::new(text);
-        assert_eq!(result.slice, expect);
+        assert_eq!(result.slices, expect);
     }
 
     #[test]
-    fn t_find_slice_2() {
+    fn find_slice_2() {
         let text: &str = "John 3:16 and Matthew 24:14";
         let expect: Vec<(usize, usize)> = vec![(0, 9), (14, 27)];
         let result: Script = Script::new(text);
-        assert_eq!(result.slice, expect);
+        assert_eq!(result.slices, expect);
     }
 
     #[test]
-    fn t_find_slice_3() {
+    fn find_slice_3() {
         let text: &str = "John 3:16, Mathew 24:14, and Psalms 83:18 are commonly used.";
         let result: Script = Script::new(text);
-        assert_eq!(result.slice, vec![(0, 9), (11, 23), (29, 41)]);
+        assert_eq!(result.slices, vec![(0, 9), (11, 23), (29, 41)]);
     }
 
     #[test]
-    fn t_single_scripture() {
+    fn single_scripture() {
         let text: &str = "John 3:16";
         let expect: &str = "[John 3:16]";
         let got: String = Script::new(text)
@@ -208,7 +244,7 @@ mod test {
 
     #[test]
     // Tests if an empty "" is added if prefix is `None`.
-    fn t_add_element_prefix_single_none() {
+    fn add_element_prefix_single_none() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let result: String = Script::new(text).surround().get_text();
@@ -216,7 +252,7 @@ mod test {
     }
 
     #[test]
-    fn t_add_element_prefix_single() {
+    fn add_element_prefix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
         let result: String = Script::new(text).prefix("[").surround().get_text();
@@ -224,7 +260,7 @@ mod test {
     }
 
     #[test]
-    fn t_add_element_prefix_single_to_string() {
+    fn add_element_prefix_single_to_string() {
         let text: String = "Another popular scripture is John 3:16, it's quoted often.".to_string();
         let expect: &str = "Another popular scripture is [John 3:16, it's quoted often.";
         let result: String = Script::new(text).prefix("[").surround().get_text();
@@ -233,7 +269,7 @@ mod test {
 
     #[test]
     // Tests to make sure the prefix len is taken into consideration for each scripture found.
-    fn t_add_element_prefix_multi() {
+    fn add_element_prefix_multi() {
         let text: &str =
             "Two popular scripture are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: &str = "Two popular scripture are [prefix]John 3:16 and [prefix]Matthew 24:14. They are quoted often.";
@@ -242,7 +278,7 @@ mod test {
     }
 
     #[test]
-    fn t_add_element_postfix_single() {
+    fn add_element_postfix_single() {
         let text: &str = "Another popular scripture is John 3:16, it's quoted often.";
         let expect: &str = "Another popular scripture is John 3:16[postfix], it's quoted often.";
         let got: String = Script::new(text).postfix("[postfix]").surround().get_text();
@@ -250,7 +286,7 @@ mod test {
     }
 
     #[test]
-    fn t_add_element_postfix_multi() {
+    fn add_element_postfix_multi() {
         let text: &str =
             "Two popular scriptures are John 3:16 and Mathew 24:14. They are quoted often.";
         let expect: &str = "Two popular scriptures are John 3:16[postfix] and Mathew 24:14[postfix]. They are quoted often.";
@@ -259,7 +295,7 @@ mod test {
     }
 
     #[test]
-    fn t_single_url() {
+    fn single_url() {
         let text: &str = "A popular scriptures is John 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [John 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
         let got: String = Script::new(text).url(&Site::JwOrg).unwrap().get_text();
@@ -267,7 +303,7 @@ mod test {
     }
 
     #[test]
-    fn t_single_url_abbr() {
+    fn single_url_abbr() {
         let text: &str = "A popular scriptures is Joh 3:16. It is quoted often.";
         let expect: String = "A popular scriptures is [Joh 3:16](https://www.jw.org/en/library/bible/study-bible/books/john/3/#v43003016). It is quoted often.".to_string();
         let got: String = Script::new(text).url(&Site::JwOrg).unwrap().get_text();
@@ -275,7 +311,7 @@ mod test {
     }
 
     #[test]
-    fn t_get_scripture() {
+    fn get_scripture() {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect: Vec<&str> = vec!["John 3:16", "Matthew 24:14"];
@@ -284,11 +320,27 @@ mod test {
     }
 
     #[test]
-    fn t_get_from_slice() {
+    fn get_from_slice() {
         let text: &str =
             "Two popular scriptures are John 3:16 and Matthew 24:14. They are quoted often.";
         let expect = "popular".to_string();
         let got: String = Script::new(text).get_from_slice(&(4, 11));
         assert_eq!(got, expect)
+    }
+
+    #[test]
+    fn get_locations1(){
+        let text: &str = "John 3:16 is well known.";
+        let expect: Locations = Locations{ slices: vec![(0, 9)], string: text.into() };
+        let got: Locations = Script::new(text).get_locations();
+        assert_eq!(got, expect);
+    }
+
+    #[test]
+    fn get_locations2(){
+        let text: &str = "John 3:16 is well known and if you know it, then it's easy to remember Timothy 3:16, another important scripture.";
+        let expect: Locations = Locations{ slices: vec![(0, 9), (71,83)], string: text.into() };
+        let got: Locations = Script::new(text).get_locations();
+        assert_eq!(got, expect);
     }
 }

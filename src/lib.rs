@@ -34,6 +34,8 @@ mod parsers;
 mod url;
 use locales::nwt_en::Site;
 use locales::BibleError;
+pub use parsers::surround::{ScriptSlice, ScriptureCollection, Locations};
+
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -42,6 +44,7 @@ pub enum Locale {
     en_us,
     es_es,
 }
+
 
 /// Adds a prefix and postfix around each scripture found in and returns the modified string.
 ///
@@ -75,7 +78,7 @@ pub fn surround<'a, S: Into<String> + Clone>(
 /// 
 /// ## Example
 /// ```
-/// use est::url;
+/// use est;
 /// use est::locales::nwt_en::Site::JwOrg;
 /// 
 /// let text: &str = "All friends should practice Proverbs 17:17!";
@@ -93,14 +96,39 @@ pub fn url<S: Into<String> + Clone>(site: &Site, text: S) -> Result<String, Bibl
 /// 
 /// ## Example
 /// ```
-/// use est::get_scriptures;
+/// use est;
 /// 
 /// let text: &str = "A popular scripture is John 3:16, it is quoted often.";
 /// let expected:Vec<String> = vec!["John 3:16".to_string()];
 /// assert_eq!(expected, est::get_scriptures(text).unwrap());
 /// ```
-pub fn get_scriptures<S: Into<String> + Clone>(text: S) -> Result<Vec<String>, BibleError> {
-    parsers::surround::Script::new(text).get_scriptures()
+pub fn get_scriptures<S: Into<String> + Clone>(string: S) -> Result<ScriptureCollection, BibleError> {
+    parsers::surround::Script::new(string).get_scriptures()
+}
+
+
+/// Returns a Location struct containing the start and end index of each scripture found and the original string passed in.
+/// This function helps you process the scriptures in whatever manner that you need.
+/// 
+/// ## Example
+/// ```
+/// use est::Locations;
+/// 
+/// let text = "John 3:16 is well known and if you know it, then it's easy to remember Timothy 3:16, another important scripture.";
+/// let expect = Locations{ slices: vec![(0, 9), (71,83)], string: text.into() };
+/// assert_eq!(expect, est::get_locations(text));
+/// ```
+///
+/// If no scriptures are found in the string then `slices` will be an empty vec.
+/// ```
+/// use est::Locations;
+/// 
+/// let text = "This string contains no scripture.";
+/// let expect = Locations{ slices: vec![], string: text.into() };
+/// assert_eq!(expect, est::get_locations(text));
+/// ```
+pub fn get_locations<'a, S: Into<String> + Clone>(string: S) -> Locations {
+    parsers::surround::Script::new(string).get_locations()
 }
 
 #[cfg(test)]
@@ -176,7 +204,7 @@ mod lib_test {
     #[test]
     fn t_url_invalid_book() {
         let input: &str = "A popular scriptures is Mary 12:12. It is quoted often.";
-        let result = url(&Site::JwOrg, input);
+        let result= url(&Site::JwOrg, input);
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
